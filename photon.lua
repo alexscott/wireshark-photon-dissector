@@ -1,8 +1,4 @@
--- Enet 1.3 Protocol Dissector For Wireshark
---
--- Cameron Gutman (aicommander@gmail.com)
--- Licensed under GPLv3
---
+-- Adapted from Cameron Gutman's enet dissector at https://github.com/cgutman/wireshark-enet-dissector licensed to us under GPLv3.
 
 -- ENetProtocolHeader
 local pf_protoheader_peerid = ProtoField.uint16("enet.peerid", "Peer ID", base.HEX)
@@ -164,16 +160,16 @@ p_enet.fields = {
 
 function p_enet.dissector(buf, pkt, root)
     pkt.cols.protocol = p_enet.name
-    
+
     subtree = root:add(p_enet, buf(0))
     i = 0
-    
+
     -- Read the protocol header
     subtree:add(pf_protoheader_peerid, buf(i, 2), buf(i, 2):uint())
     i = i + 2
     subtree:add(pf_protoheader_senttime, buf(i, 2), buf(i, 2):uint())
     i = i + 2
-    
+
     -- Read the command header
     command = buf(i, 1):uint()
     subtree:add(pf_cmdheader_command, buf(i, 1), buf(i, 1):uint())
@@ -182,12 +178,12 @@ function p_enet.dissector(buf, pkt, root)
     i = i + 1
     subtree:add(pf_cmdheader_relseqnum, buf(i, 2), buf(i, 2):uint())
     i = i + 2
-    
+
     command = bit.band(command, 0xF)
     if command == 1 then
         -- ENetProtocolAcknowledge
         subtree:add(pf_ack, buf(0))
-        
+
         subtree:add(pf_ack_recvrelseqnum, buf(i, 2), buf(i, 2):uint())
         i = i + 2
         subtree:add(pf_ack_recvsenttime, buf(i, 2), buf(i, 2):uint())
@@ -195,7 +191,7 @@ function p_enet.dissector(buf, pkt, root)
     elseif command == 2 then
         -- ENetProtocolConnect
         subtree:add(pf_conn, buf(0))
-        
+
         subtree:add(pf_conn_outgoingpeerid, buf(i, 2), buf(i, 2):uint())
         i = i + 2
         subtree:add(pf_conn_incomingsessionid, buf(i, 1), buf(i, 1):uint())
@@ -225,7 +221,7 @@ function p_enet.dissector(buf, pkt, root)
     elseif command == 3 then
         -- ENetProtocolVerifyConnect
         subtree:add(pf_connverify, buf(0))
-        
+
         subtree:add(pf_connverify_outgoingpeerid, buf(i, 2), buf(i, 2):uint())
         i = i + 2
         subtree:add(pf_connverify_incomingsessionid, buf(i, 1), buf(i, 1):uint())
@@ -253,15 +249,15 @@ function p_enet.dissector(buf, pkt, root)
     elseif command == 4 then
         -- ENetProtocolDisconnect
         subtree:add(pf_disconn, buf(0))
-        
+
         subtree:add(pf_disconn_data, buf(i, 4), buf(i, 4):uint())
     elseif command == 5 then
         -- ENetProtocolPing
-        subtree:add(pf_ping, buf(0))  
+        subtree:add(pf_ping, buf(0))
     elseif command == 6 then
         -- ENetProtocolSendReliable
         subtree:add(pf_sendrel, buf(0))
-        
+
         datalen = buf(i, 2):uint()
         subtree:add(pf_sendrel_datalen, buf(i, 2), buf(i, 2):uint())
         i = i + 2
@@ -269,7 +265,7 @@ function p_enet.dissector(buf, pkt, root)
     elseif command == 7 then
         -- ENetProtocolSendUnreliable
         subtree:add(pf_sendunrel, buf(0))
-        
+
         subtree:add(pf_sendunrel_unrelseqnum, buf(i, 2), buf(i, 2):uint())
         i = i + 2
         datalen = buf(i, 2):uint()
@@ -279,7 +275,7 @@ function p_enet.dissector(buf, pkt, root)
     elseif command == 8 then
         -- ENetProtocolSendFragment
         subtree:add(pf_sendfrag, buf(0))
-        
+
         subtree:add(pf_sendfrag_startseqnum, buf(i, 2), buf(i, 2):uint())
         i = i + 2
         datalen = buf(i, 2):uint()
@@ -297,7 +293,7 @@ function p_enet.dissector(buf, pkt, root)
     elseif command == 9 then
         -- ENetProtocolSendUnsequenced
         subtree:add(pf_sendunseq, buf(0))
-        
+
         subtree:add(pf_sendunseq_unseqgroup, buf(i, 2), buf(i, 2):uint())
         i = i + 2
         datalen = buf(i, 2):uint()
@@ -307,7 +303,7 @@ function p_enet.dissector(buf, pkt, root)
     elseif command == 10 then
         -- ENetProtocolBandwidthLimit
         subtree:add(pf_bwlimit, buf(0))
-        
+
         subtree:add(pf_bwlimit_incomingbandwidth, buf(i, 4), buf(i, 4):uint())
         i = i + 4
         subtree:add(pf_bwlimit_outgoingbandwidth, buf(i, 4), buf(i, 4):uint())
@@ -315,7 +311,7 @@ function p_enet.dissector(buf, pkt, root)
     elseif command == 11 then
         -- ENetProtocolThrottleConfigure
         subtree:add(pf_throttle, buf(0))
-        
+
         subtree:add(pf_throttle_packetthrottleinterval, buf(i, 4), buf(i, 4):uint())
         i = i + 4
         subtree:add(pf_throttle_packetthrottleaccel, buf(i, 4), buf(i, 4):uint())
