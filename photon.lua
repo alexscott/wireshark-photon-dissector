@@ -1,14 +1,22 @@
 -- Adapted from Cameron Gutman's enet dissector at https://github.com/cgutman/wireshark-enet-dissector licensed to us under GPLv3.
 
+-- TODO: support Photon CRC check
+-- TODO: enumerate possible command flags, command types
+
 -- ENetProtocolHeader
 local pf_protoheader_peerid = ProtoField.uint16("enet.peerid", "Peer ID", base.HEX)
 local pf_protoheader_crcenabled = ProtoField.uint8("enet.crcenabled", "CRC enabled?", base.HEX)
 local pf_protoheader_commandcount = ProtoField.uint8("enet.commandcount", "Command count", base.DEC)
+local pf_protoheader_timeint = ProtoField.int32("enet.timeint", "Timestamp", base.DEC)
+local pf_protoheader_challenge = ProtoField.int32("enet.challenge", "Challenge", base.DEC)
 
 -- ENetProtocolCommandHeader
-local pf_cmdheader_command = ProtoField.uint8("enet.command", "Command", base.HEX)
-local pf_cmdheader_channelid = ProtoField.uint8("enet.channelid", "Channel ID", base.HEX)
-local pf_cmdheader_relseqnum = ProtoField.uint16("enet.relseqnum", "Reliable Sequence Number", base.HEX)
+local pf_cmdheader_commandtype = ProtoField.uint8("enet.commandtype", "Command type", base.DEC)
+local pf_cmdheader_channelid = ProtoField.uint8("enet.channelid", "Channel ID", base.DEC)
+local pf_cmdheader_commandflags = ProtoField.uint8("enet.commandflags", "Command flags", base.HEX)
+local pf_cmdheader_reservedbyte = ProtoField.uint8("enet.reservedbyte", "Reserved byte", base.HEX)
+local pf_cmfheader_commandlength = ProtoField.int32("enet.commandlength", "Command length", base.DEC)
+local pf_cmdheader_relseqnum = ProtoField.int32("enet.relseqnum", "Reliable Sequence Number", base.DEC)
 
 -- ENetProtocolAcknowledge
 local pf_ack = ProtoField.bytes("enet.ack", "Acknowledge")
@@ -96,8 +104,13 @@ p_enet.fields = {
     pf_protoheader_peerid,
     pf_protoheader_crcenabled,
     pf_protoheader_commandcount,
-    pf_cmdheader_command,
+    pf_protoheader_timeint,
+    pf_protoheader_challenge,
+    pf_cmdheader_commandtype,
     pf_cmdheader_channelid,
+    pf_cmdheader_commandflags,
+    pf_cmdheader_reservedbyte,
+    pf_cmdheader_commandlength,
     pf_cmdheader_relseqnum,
     pf_ack,
     pf_ack_recvrelseqnum,
@@ -173,15 +186,25 @@ function p_enet.dissector(buf, pkt, root)
     i = i + 1
     subtree:add(pf_protoheader_commandcount, buf(i, 1), buf(i, 1):uint())
     i = i + 1
+    subtree:add(pf_protoheader_timeint, buf(i, 4), buf(i, 4):int())
+    i = i + 4
+    subtree:add(pf_protoheader_challenge, buf(i, 4), buf(i, 4):int())
+    i = i + 4
 
     -- Read the command header
     command = buf(i, 1):uint()
-    subtree:add(pf_cmdheader_command, buf(i, 1), buf(i, 1):uint())
+    subtree:add(pf_cmdheader_commandtype, buf(i, 1), buf(i, 1):uint())
     i = i + 1
     subtree:add(pf_cmdheader_channelid, buf(i, 1), buf(i, 1):uint())
     i = i + 1
-    subtree:add(pf_cmdheader_relseqnum, buf(i, 2), buf(i, 2):uint())
-    i = i + 2
+    subtree:add(pf_cmdheader_commandflags, buf(i, 1), buf(i, 1):uint())
+    i = i + 1
+    subtree:add(pf_cmdheader_reservedbyte, buf(i, 1), buf(i, 1):uint())
+    i = i + 1
+    subtree:add(pf_cmdheader_commandlength, buf(i, 4), buf(i, 4):int())
+    i = i + 4
+    subtree:add(pf_cmdheader_commandlength, buf(i, 4), buf(i, 4):int())
+    i = i + 4
 
     command = bit.band(command, 0xF)
     if command == 1 then
