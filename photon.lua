@@ -2,6 +2,7 @@
 
 -- TODO: support Photon CRC check
 -- TODO: enumerate possible command flags, command types
+-- TODO: support multiple commands :X
 
 -- ENetProtocolHeader
 local pf_protoheader_peerid = ProtoField.uint16("enet.peerid", "Peer ID", base.HEX)
@@ -15,8 +16,8 @@ local pf_cmdheader_commandtype = ProtoField.uint8("enet.commandtype", "Command t
 local pf_cmdheader_channelid = ProtoField.uint8("enet.channelid", "Channel ID", base.DEC)
 local pf_cmdheader_commandflags = ProtoField.uint8("enet.commandflags", "Command flags", base.HEX)
 local pf_cmdheader_reservedbyte = ProtoField.uint8("enet.reservedbyte", "Reserved byte", base.HEX)
-local pf_cmfheader_commandlength = ProtoField.int32("enet.commandlength", "Command length", base.DEC)
-local pf_cmdheader_relseqnum = ProtoField.int32("enet.relseqnum", "Reliable Sequence Number", base.DEC)
+local pf_cmdheader_commandlength = ProtoField.int32("enet.commandlength", "Command length", base.DEC)
+local pf_cmdheader_relseqnum = ProtoField.int32("enet.relseqnum", "Reliable sequence number", base.DEC)
 
 -- ENetProtocolAcknowledge
 local pf_ack = ProtoField.bytes("enet.ack", "Acknowledge")
@@ -74,29 +75,25 @@ local pf_ping = ProtoField.bytes("enet.ping", "Ping")
 
 -- ENetProtocolSendReliable
 local pf_sendrel = ProtoField.bytes("enet.sendrel", "Send Reliable")
-local pf_sendrel_datalen = ProtoField.uint16("enet.sendrel.datalen", "Data Length", base.HEX)
 local pf_sendrel_data = ProtoField.bytes("enet.sendrel.data", "Data")
 
 -- ENetProtocolSendUnreliable
 local pf_sendunrel = ProtoField.bytes("enet.sendunrel", "Send Unreliable")
-local pf_sendunrel_unrelseqnum = ProtoField.uint16("enet.sendunrel.unrelseqnum", "Unreliable Sequence Number", base.HEX)
-local pf_sendunrel_datalen = ProtoField.uint16("enet.sendunrel.datalen", "Data Length", base.HEX)
+local pf_sendunrel_unrelseqnum = ProtoField.int32("enet.sendunrel.unrelseqnum", "Unreliable Sequence Number", base.DEC)
 local pf_sendunrel_data = ProtoField.bytes("enet.sendunrel.data", "Data")
 
 -- ENetProtocolSendUnsequenced
 local pf_sendunseq = ProtoField.bytes("enet.sendunseq", "Send Unsequenced")
-local pf_sendunseq_unseqgroup = ProtoField.uint16("enet.sendunseq.unseqgroup", "Unsequenced Group", base.HEX)
-local pf_sendunseq_datalen = ProtoField.uint16("enet.sendunseq.datalen", "Data Length", base.HEX)
+local pf_sendunseq_unseqgroup = ProtoField.int32("enet.sendunseq.unseqgroup", "Unsequenced Group", base.DEC)
 local pf_sendunseq_data = ProtoField.bytes("enet.sendunseq.data", "Data")
 
 -- ENetProtocolSendFragment
 local pf_sendfrag = ProtoField.bytes("enet.sendfrag", "Send Fragment")
-local pf_sendfrag_startseqnum = ProtoField.uint16("enet.sendfrag.startseqnum", "Start Sequence Number", base.HEX)
-local pf_sendfrag_datalen = ProtoField.uint16("enet.sendfrag.datalen", "Data Length", base.HEX)
-local pf_sendfrag_fragcount = ProtoField.uint32("enet.sendfrag.fragcount", "Fragment Count", base.HEX)
-local pf_sendfrag_fragnum = ProtoField.uint32("enet.sendfrag.fragnum", "Fragment Number", base.HEX)
-local pf_sendfrag_totallen = ProtoField.uint32("enet.sendfrag.totallen", "Total Length", base.HEX)
-local pf_sendfrag_fragoff = ProtoField.uint32("enet.sendfrag.fragoff", "Fragment Offset", base.HEX)
+local pf_sendfrag_startseqnum = ProtoField.int32("enet.sendfrag.startseqnum", "Start Sequence Number", base.DEC)
+local pf_sendfrag_fragcount = ProtoField.int32("enet.sendfrag.fragcount", "Fragment Count", base.DEC)
+local pf_sendfrag_fragnum = ProtoField.int32("enet.sendfrag.fragnum", "Fragment Number", base.DEC)
+local pf_sendfrag_totallen = ProtoField.int32("enet.sendfrag.totallen", "Total Length", base.DEC)
+local pf_sendfrag_fragoff = ProtoField.int32("enet.sendfrag.fragoff", "Fragment Offset", base.DEC)
 local pf_sendfraq_data = ProtoField.bytes("enet.sendfrag.data", "Data")
 
 p_enet = Proto ("enet", "ENet")
@@ -153,19 +150,15 @@ p_enet.fields = {
     pf_disconn_data,
     pf_ping,
     pf_sendrel,
-    pf_sendrel_datalen,
     pf_sendrel_data,
     pf_sendunrel,
     pf_sendunrel_unrelseqnum,
-    pf_sendunrel_datalen,
     pf_sendunrel_data,
     pf_sendunseq,
     pf_sendunseq_unseqgroup,
-    pf_sendunseq_datalen,
     pf_sendunseq_data,
     pf_sendfrag,
     pf_sendfrag_startseqnum,
-    pf_sendfrag_datalen,
     pf_sendfrag_fragcount,
     pf_sendfrag_fragnum,
     pf_sendfrag_totallen,
@@ -201,10 +194,14 @@ function p_enet.dissector(buf, pkt, root)
     i = i + 1
     subtree:add(pf_cmdheader_reservedbyte, buf(i, 1), buf(i, 1):uint())
     i = i + 1
+
+    command_length = buf(i, 4):int()
     subtree:add(pf_cmdheader_commandlength, buf(i, 4), buf(i, 4):int())
     i = i + 4
-    subtree:add(pf_cmdheader_commandlength, buf(i, 4), buf(i, 4):int())
+    subtree:add(pf_cmdheader_relseqnum, buf(i, 4), buf(i, 4):int())
     i = i + 4
+
+    data_length = command_length - 12 -- sizeof(command headers)
 
     command = bit.band(command, 0xF)
     if command == 1 then
@@ -277,56 +274,43 @@ function p_enet.dissector(buf, pkt, root)
         -- ENetProtocolDisconnect
         subtree:add(pf_disconn, buf(0))
 
-        subtree:add(pf_disconn_data, buf(i, 4), buf(i, 4):uint())
+        subtree:add(pf_disconn_data, buf(i, 4), buf(i, 4):int())
     elseif command == 5 then
         -- ENetProtocolPing
         subtree:add(pf_ping, buf(0))
     elseif command == 6 then
         -- ENetProtocolSendReliable
         subtree:add(pf_sendrel, buf(0))
-
-        datalen = buf(i, 2):uint()
-        subtree:add(pf_sendrel_datalen, buf(i, 2), buf(i, 2):uint())
-        i = i + 2
-        subtree:add(pf_sendrel_data, buf(i, datalen))
+        subtree:add(pf_sendrel_data, buf(i, command_length))
     elseif command == 7 then
         -- ENetProtocolSendUnreliable
         subtree:add(pf_sendunrel, buf(0))
-
-        subtree:add(pf_sendunrel_unrelseqnum, buf(i, 2), buf(i, 2):uint())
-        i = i + 2
-        datalen = buf(i, 2):uint()
-        subtree:add(pf_sendunrel_datalen, buf(i, 2), buf(i, 2):uint())
-        i = i + 2
-        subtree:add(pf_sendunrel_data, buf(i, datalen))
+        subtree:add(pf_sendunrel_unrelseqnum, buf(i, 4), buf(i, 4):int())
+        i = i + 4
+        data_length = data_length - 4
+        subtree:add(pf_sendunrel_data, buf(i, data_length))
     elseif command == 8 then
         -- ENetProtocolSendFragment
         subtree:add(pf_sendfrag, buf(0))
-
-        subtree:add(pf_sendfrag_startseqnum, buf(i, 2), buf(i, 2):uint())
-        i = i + 2
-        datalen = buf(i, 2):uint()
-        subtree:add(pf_sendfrag_datalen, buf(i, 2), buf(i, 2):uint())
-        i = i + 2
-        subtree:add(pf_sendfrag_fragcount, buf(i, 4), buf(i, 4):uint())
+        subtree:add(pf_sendfrag_startseqnum, buf(i, 4), buf(i, 4):int())
         i = i + 4
-        subtree:add(pf_sendfrag_fragnum, buf(i, 4), buf(i, 4):uint())
+        subtree:add(pf_sendfrag_fragcount, buf(i, 4), buf(i, 4):int())
         i = i + 4
-        subtree:add(pf_sendfrag_totallen, buf(i, 4), buf(i, 4):uint())
+        subtree:add(pf_sendfrag_fragnum, buf(i, 4), buf(i, 4):int())
         i = i + 4
-        subtree:add(pf_sendfrag_fragoff, buf(i, 4), buf(i, 4):uint())
+        subtree:add(pf_sendfrag_totallen, buf(i, 4), buf(i, 4):int())
         i = i + 4
-        subtree:add(pf_sendfrag_data, buf(i, datalen))
+        subtree:add(pf_sendfrag_fragoff, buf(i, 4), buf(i, 4):int())
+        i = i + 4
+        data_length = data_length - 20
+        subtree:add(pf_sendfrag_data, buf(i, data_length))
     elseif command == 9 then
         -- ENetProtocolSendUnsequenced
         subtree:add(pf_sendunseq, buf(0))
-
-        subtree:add(pf_sendunseq_unseqgroup, buf(i, 2), buf(i, 2):uint())
-        i = i + 2
-        datalen = buf(i, 2):uint()
-        subtree:add(pf_sendunseq_datalen, buf(i, 2), buf(i, 2):uint())
-        i = i + 2
-        subtree:add(pf_sendunseq_data, buf(i, datalen))
+        subtree:add(pf_sendunseq_unseqgroup, buf(i, 4), buf(i, 4):int())
+        i = i + 4
+        data_length = data_length - 4
+        subtree:add(pf_sendunseq_data, buf(i, command_length))
     elseif command == 10 then
         -- ENetProtocolBandwidthLimit
         subtree:add(pf_bwlimit, buf(0))
