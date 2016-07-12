@@ -2,7 +2,8 @@
 
 -- ENetProtocolHeader
 local pf_protoheader_peerid = ProtoField.uint16("enet.peerid", "Peer ID", base.HEX)
-local pf_protoheader_senttime = ProtoField.uint16("enet.senttime", "Sent Time", base.HEX)
+local pf_protoheader_crcenabled = ProtoField.uint8("enet.crcenabled", "CRC enabled?", base.HEX)
+local pf_protoheader_commandcount = ProtoField.uint8("enet.commandcount", "Command count", base.DEC)
 
 -- ENetProtocolCommandHeader
 local pf_cmdheader_command = ProtoField.uint8("enet.command", "Command", base.HEX)
@@ -93,7 +94,8 @@ local pf_sendfraq_data = ProtoField.bytes("enet.sendfrag.data", "Data")
 p_enet = Proto ("enet", "ENet")
 p_enet.fields = {
     pf_protoheader_peerid,
-    pf_protoheader_senttime,
+    pf_protoheader_crcenabled,
+    pf_protoheader_commandcount,
     pf_cmdheader_command,
     pf_cmdheader_channelid,
     pf_cmdheader_relseqnum,
@@ -167,8 +169,10 @@ function p_enet.dissector(buf, pkt, root)
     -- Read the protocol header
     subtree:add(pf_protoheader_peerid, buf(i, 2), buf(i, 2):uint())
     i = i + 2
-    subtree:add(pf_protoheader_senttime, buf(i, 2), buf(i, 2):uint())
-    i = i + 2
+    subtree:add(pf_protoheader_crcenabled, buf(i, 1), buf(i, 1):uint())
+    i = i + 1
+    subtree:add(pf_protoheader_commandcount, buf(i, 1), buf(i, 1):uint())
+    i = i + 1
 
     -- Read the command header
     command = buf(i, 1):uint()
