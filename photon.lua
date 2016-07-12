@@ -11,9 +11,17 @@ local pf_protoheader_commandcount = ProtoField.uint8("enet.commandcount", "Comma
 local pf_protoheader_timeint = ProtoField.int32("enet.timeint", "Timestamp", base.DEC)
 local pf_protoheader_challenge = ProtoField.int32("enet.challenge", "Challenge", base.DEC)
 
+-- https://github.com/AltspaceVR/UnityClient/blob/master/Assets/Altspace/Scripts/Networking/PhotonChannel.cs#L9
+local channels = {
+   [1] = "Photon view instantiation",
+   [2] = "VoIP",
+   [3] = "RPC",
+   [4] = "Photon view serialization"
+}
+
 -- ENetProtocolCommandHeader
 local pf_cmdheader_commandtype = ProtoField.uint8("enet.commandtype", "Command type", base.DEC)
-local pf_cmdheader_channelid = ProtoField.uint8("enet.channelid", "Channel ID", base.DEC)
+local pf_cmdheader_channelid = ProtoField.uint8("enet.channelid", "Channel ID", base.DEC, channels)
 local pf_cmdheader_commandflags = ProtoField.uint8("enet.commandflags", "Command flags", base.HEX)
 local pf_cmdheader_reservedbyte = ProtoField.uint8("enet.reservedbyte", "Reserved byte", base.HEX)
 local pf_cmdheader_commandlength = ProtoField.int32("enet.commandlength", "Command length", base.DEC)
