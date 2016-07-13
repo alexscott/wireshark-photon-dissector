@@ -2,7 +2,6 @@
 
 -- TODO: support Photon CRC check
 -- TODO: enumerate possible command flags, command types
--- TODO: support multiple commands :X
 
 -- ENetProtocolHeader
 local pf_protoheader_peerid = ProtoField.uint16("enet.peerid", "Peer ID", base.HEX)
