@@ -1,7 +1,7 @@
 -- Adapted from Cameron Gutman's enet dissector at https://github.com/cgutman/wireshark-enet-dissector licensed to us under GPLv3.
 
 -- TODO: support Photon CRC check
--- TODO: enumerate possible command flags, command types
+-- TODO: enumerate possible command flags
 
 -- ENetProtocolHeader
 local pf_protoheader_peerid = ProtoField.uint16("enet.peerid", "Peer ID", base.HEX)
@@ -82,7 +82,7 @@ local pf_sendfrag_fragcount = ProtoField.int32("enet.sendfrag.fragcount", "Fragm
 local pf_sendfrag_fragnum = ProtoField.int32("enet.sendfrag.fragnum", "Fragment Number", base.DEC)
 local pf_sendfrag_totallen = ProtoField.int32("enet.sendfrag.totallen", "Total Length", base.DEC)
 local pf_sendfrag_fragoff = ProtoField.int32("enet.sendfrag.fragoff", "Fragment Offset", base.DEC)
-local pf_sendfraq_data = ProtoField.bytes("enet.sendfrag.data", "Data")
+local pf_sendfrag_data = ProtoField.bytes("enet.sendfrag.data", "Data")
 
 p_enet = Proto ("enet", "ENet")
 p_enet.fields = {
@@ -117,7 +117,7 @@ p_enet.fields = {
     pf_sendfrag_totallen,
     pf_sendfrag_fragoff,
     pf_sendfrag_data
-    }
+}
 
 function p_enet.dissector(buf, pkt, root)
     pkt.cols.protocol = p_enet.name
@@ -187,8 +187,9 @@ function p_enet.dissector(buf, pkt, root)
           -- ENetProtocolPing
        elseif command == 6 then
           -- ENetProtocolSendReliable
-          command_tree:add(pf_sendrel_data, buf(i, command_length))
-          i = i + command_length
+          local data_length = command_length - command_headers_length
+          command_tree:add(pf_sendrel_data, buf(i, data_length))
+          i = i + data_length
        elseif command == 7 then
           -- ENetProtocolSendUnreliable
           command_tree:add(pf_sendunrel_unrelseqnum, buf(i, 4), buf(i, 4):int())
