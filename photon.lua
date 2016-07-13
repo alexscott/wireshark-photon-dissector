@@ -47,33 +47,10 @@ local pf_ack_recvrelseqnum = ProtoField.int32("enet.ack.recvrelseqnum", "Receive
 local pf_ack_recvsenttime = ProtoField.int32("enet.ack.recvsenttime", "Received sent timestamp", base.DEC)
 
 -- ENetProtocolConnect
-local pf_conn_outgoingpeerid = ProtoField.uint16("enet.conn.outgoingpeerid", "Outgoing Peer ID", base.HEX)
-local pf_conn_incomingsessionid = ProtoField.uint8("enet.conn.incomingsessionid", "Incoming Session ID", base.HEX)
-local pf_conn_outgoingsessionid = ProtoField.uint8("enet.conn.outgoingsessionid", "Outgoing Session ID", base.HEX)
-local pf_conn_mtu = ProtoField.uint32("enet.conn.mtu", "MTU", base.HEX)
-local pf_conn_windowsize = ProtoField.uint32("enet.conn.windowsize", "Window Size", base.HEX)
-local pf_conn_channelcount = ProtoField.uint32("enet.conn.channelcount", "Channel Count", base.HEX)
-local pf_conn_incomingbandwidth = ProtoField.uint32("enet.conn.incomingbandwidth", "Incoming Bandwidth", base.HEX)
-local pf_conn_outgoingbandwidth = ProtoField.uint32("enet.conn.outgoingbandwidth", "Outgoing Bandwidth", base.HEX)
-local pf_conn_packetthrottleinterval = ProtoField.uint32("enet.conn.packetthrottleinterval", "Packet Throttle Interval", base.HEX)
-local pf_conn_packetthrottleaccel = ProtoField.uint32("enet.conn.packetthrottleaccel", "Packet Throttle Acceleration", base.HEX)
-local pf_conn_packetthrottledecel = ProtoField.uint32("enet.conn.packetthrottledecel", "Packet Throttle Deceleration", base.HEX)
-local pf_conn_connectid = ProtoField.uint32("enet.conn.connectid", "Connect ID", base.HEX)
-local pf_conn_data = ProtoField.uint32("enet.conn.data", "Data", base.HEX)
+local pf_conn_data = ProtoField.bytes("enet.conn.data", "Data", base.HEX)
 
 -- ENetProtocolVerifyConnect
-local pf_connverify_outgoingpeerid = ProtoField.uint16("enet.connverify.outgoingpeerid", "Outgoing Peer ID", base.HEX)
-local pf_connverify_incomingsessionid = ProtoField.uint8("enet.connverify.incomingsessionid", "Incoming Session ID", base.HEX)
-local pf_connverify_outgoingsessionid = ProtoField.uint8("enet.connverify.outgoingsessionid", "Outgoing Session ID", base.HEX)
-local pf_connverify_mtu = ProtoField.uint32("enet.connverify.mtu", "MTU", base.HEX)
-local pf_connverify_windowsize = ProtoField.uint32("enet.connverify.windowsize", "Window Size", base.HEX)
-local pf_connverify_channelcount = ProtoField.uint32("enet.connverify.channelcount", "Channel Count", base.HEX)
-local pf_connverify_incomingbandwidth = ProtoField.uint32("enet.connverify.incomingbandwidth", "Incoming Bandwidth", base.HEX)
-local pf_connverify_outgoingbandwidth = ProtoField.uint32("enet.connverify.outgoingbandwidth", "Outgoing Bandwidth", base.HEX)
-local pf_connverify_packetthrottleinterval = ProtoField.uint32("enet.connverify.packetthrottleinterval", "Packet Throttle Interval", base.HEX)
-local pf_connverify_packetthrottleaccel = ProtoField.uint32("enet.connverify.packetthrottleaccel", "Packet Throttle Acceleration", base.HEX)
-local pf_connverify_packetthrottledecel = ProtoField.uint32("enet.connverify.packetthrottledecel", "Packet Throttle Deceleration", base.HEX)
-local pf_connverify_connectid = ProtoField.uint32("enet.connverify.connectid", "Connect ID", base.HEX)
+local pf_connverify_data = ProtoField.bytes("enet.connverify.data", "Data", base.HEX)
 
 -- ENetProtocolBandwidthLimit
 local pf_bwlimit_incomingbandwidth = ProtoField.uint32("enet.bwlimit.incomingbandwidth", "Incoming Bandwidth", base.HEX)
@@ -85,7 +62,6 @@ local pf_throttle_packetthrottleaccel = ProtoField.uint32("enet.throttle.packett
 local pf_throttle_packetthrottledecel = ProtoField.uint32("enet.throttle.packetthrottledecel", "Packet Throttle Deceleration", base.HEX)
 
 -- ENetProtocolDisconnect
-local pf_disconn_data = ProtoField.uint32("enet.disconn.data", "Data", base.HEX)
 
 -- ENetProtocolPing
 
@@ -123,37 +99,13 @@ p_enet.fields = {
     pf_cmdheader_relseqnum,
     pf_ack_recvrelseqnum,
     pf_ack_recvsenttime,
-    pf_conn_outgoingpeerid,
-    pf_conn_incomingsessionid,
-    pf_conn_outgoingsessionid,
-    pf_conn_mtu,
-    pf_conn_windowsize,
-    pf_conn_channelcount,
-    pf_conn_incomingbandwidth,
-    pf_conn_outgoingbandwidth,
-    pf_conn_packetthrottleinterval,
-    pf_conn_packetthrottleaccel,
-    pf_conn_packetthrottledecel,
-    pf_conn_connectid,
     pf_conn_data,
-    pf_connverify_outgoingpeerid,
-    pf_connverify_incomingsessionid,
-    pf_connverify_outgoingsessionid,
-    pf_connverify_mtu,
-    pf_connverify_windowsize,
-    pf_connverify_channelcount,
-    pf_connverify_incomingbandwidth,
-    pf_connverify_outgoingbandwidth,
-    pf_connverify_packetthrottleinterval,
-    pf_connverify_packetthrottleaccel,
-    pf_connverify_packetthrottledecel,
-    pf_connverify_connectid,
+    pf_connverify_data,
     pf_bwlimit_incomingbandwidth,
     pf_bwlimit_outgoingbandwidth,
     pf_throttle_packetthrottleinterval,
     pf_throttle_packetthrottleaccel,
     pf_throttle_packetthrottledecel,
-    pf_disconn_data,
     pf_sendrel_data,
     pf_sendunrel_unrelseqnum,
     pf_sendunrel_data,
@@ -209,7 +161,7 @@ function p_enet.dissector(buf, pkt, root)
        command_tree:add(pf_cmdheader_relseqnum, buf(i, 4), buf(i, 4):int())
        i = i + 4
 
-       local data_length = command_length - 12 -- sizeof(command headers)
+       local command_headers_length = 12
 
        if command == 1 then
           -- ENetProtocolAcknowledge
@@ -219,62 +171,18 @@ function p_enet.dissector(buf, pkt, root)
           i = i + 4
        elseif command == 2 then
           -- ENetProtocolConnect
-          command_tree:add(pf_conn_outgoingpeerid, buf(i, 2), buf(i, 2):uint())
-          i = i + 2
-          command_tree:add(pf_conn_incomingsessionid, buf(i, 1), buf(i, 1):uint())
-          i = i + 1
-          command_tree:add(pf_conn_outgoingsessionid, buf(i, 1), buf(i, 1):uint())
-          i = i + 1
-          command_tree:add(pf_conn_mtu, buf(i, 4), buf(i, 4):uint())
-          i = i + 4
-          command_tree:add(pf_conn_windowsize, buf(i, 4), buf(i, 4):uint())
-          i = i + 4
-          command_tree:add(pf_conn_channelcount, buf(i, 4), buf(i, 4):uint())
-          i = i + 4
-          command_tree:add(pf_conn_incomingbandwidth, buf(i, 4), buf(i, 4):uint())
-          i = i + 4
-          command_tree:add(pf_conn_outgoingbandwidth, buf(i, 4), buf(i, 4):uint())
-          i = i + 4
-          command_tree:add(pf_conn_packetthrottleinterval, buf(i, 4), buf(i, 4):uint())
-          i = i + 4
-          command_tree:add(pf_conn_packetthrottleaccel, buf(i, 4), buf(i, 4):uint())
-          i = i + 4
-          command_tree:add(pf_conn_packetthrottledecel, buf(i, 4), buf(i, 4):uint())
-          i = i + 4
-          command_tree:add(pf_conn_connectid, buf(i, 4), buf(i, 4):uint())
-          i = i + 4
-          command_tree:add(pf_conn_data, buf(i, 4), buf(i, 4):uint())
-          i = i + 4
+          -- TODO: figure out what these bytes are
+          local data_length = command_length - command_headers_length
+          command_tree:add(pf_conn_data, buf(i, data_length))
+          i = i + data_length
        elseif command == 3 then
           -- ENetProtocolVerifyConnect
-          command_tree:add(pf_connverify_outgoingpeerid, buf(i, 2), buf(i, 2):uint())
-          i = i + 2
-          command_tree:add(pf_connverify_incomingsessionid, buf(i, 1), buf(i, 1):uint())
-          i = i + 1
-          command_tree:add(pf_connverify_outgoingsessionid, buf(i, 1), buf(i, 1):uint())
-          i = i + 1
-          command_tree:add(pf_connverify_mtu, buf(i, 4), buf(i, 4):uint())
-          i = i + 4
-          command_tree:add(pf_connverify_windowsize, buf(i, 4), buf(i, 4):uint())
-          i = i + 4
-          command_tree:add(pf_connverify_channelcount, buf(i, 4), buf(i, 4):uint())
-          i = i + 4
-          command_tree:add(pf_connverify_incomingbandwidth, buf(i, 4), buf(i, 4):uint())
-          i = i + 4
-          command_tree:add(pf_connverify_outgoingbandwidth, buf(i, 4), buf(i, 4):uint())
-          i = i + 4
-          command_tree:add(pf_connverify_packetthrottleinterval, buf(i, 4), buf(i, 4):uint())
-          i = i + 4
-          command_tree:add(pf_connverify_packetthrottleaccel, buf(i, 4), buf(i, 4):uint())
-          i = i + 4
-          command_tree:add(pf_connverify_packetthrottledecel, buf(i, 4), buf(i, 4):uint())
-          i = i + 4
-          command_tree:add(pf_connverify_connectid, buf(i, 4), buf(i, 4):uint())
-          i = i + 4
+          -- TODO: figure out what these bytes are
+          local data_length = command_length - command_headers_length
+          command_tree:add(pf_connverify_data, buf(i, data_length))
+          i = i + data_length
        elseif command == 4 then
           -- ENetProtocolDisconnect
-          command_tree:add(pf_disconn_data, buf(i, 4), buf(i, 4):int())
-          i = i + 4
        elseif command == 5 then
           -- ENetProtocolPing
        elseif command == 6 then
@@ -285,7 +193,7 @@ function p_enet.dissector(buf, pkt, root)
           -- ENetProtocolSendUnreliable
           command_tree:add(pf_sendunrel_unrelseqnum, buf(i, 4), buf(i, 4):int())
           i = i + 4
-          data_length = data_length - 4
+          local data_length = command_length - command_headers_length - 4
           command_tree:add(pf_sendunrel_data, buf(i, data_length))
           i = i + data_length
        elseif command == 8 then
@@ -300,15 +208,15 @@ function p_enet.dissector(buf, pkt, root)
           i = i + 4
           command_tree:add(pf_sendfrag_fragoff, buf(i, 4), buf(i, 4):int())
           i = i + 4
-          data_length = data_length - 20
+          local data_length = command_length - command_headers_length - 20
           command_tree:add(pf_sendfrag_data, buf(i, data_length))
           i = i + data_length
        elseif command == 9 then
           -- ENetProtocolSendUnsequenced
           command_tree:add(pf_sendunseq_unseqgroup, buf(i, 4), buf(i, 4):int())
           i = i + 4
-          data_length = data_length - 4
-          command_tree:add(pf_sendunseq_data, buf(i, command_length))
+          local data_length = command_length - command_headers_length - 4
+          command_tree:add(pf_sendunseq_data, buf(i, data_length))
           i = i + data_length
        elseif command == 10 then
           -- ENetProtocolBandwidthLimit
