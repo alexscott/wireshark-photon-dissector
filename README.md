@@ -6,6 +6,10 @@ This is almost a general-purpose Wireshark dissector for any Photon traffic. The
 
 This is *not* almost a general-purpose ENet dissector -- Photon packages up multiple ENet commands into one UDP packet in a Photon-specific (and undocumented?) way, so Photon packets look somewhat different from ENet packets designed to carry only one command.
 
-To run: Execute wireshark with the command-line option "-X lua_script:<path to photon.lua>". Choose a Photon UDP packet to dissect, choose "Decode As..." and select ENet. (You might want to set it as the default decoder for UDP port 5056.)
+## Usage
+
+Run Wireshark with the command-line option "-X lua_script:<path to photon.lua>" to load the dissector.
+
+UDP packets on port 5056 should be dissected as Photon packets.
 
 [enet-dissector]: https://github.com/cgutman/wireshark-enet-dissector
