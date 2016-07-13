@@ -1,10 +1,11 @@
-# wireshark-enet-dissector
-Wireshark Dissector for the ENet Protocol
+# wireshark-photon-dissector
 
-To run: Execute wireshark with "-X lua_script:<path to script>" option.
+A Wireshark dissector for Altspace Photon traffic, derived from the PUN codebase and the ENet dissector [here][enet-dissector]. WIP.
 
-Usage notes:
+This is almost a general-purpose Wireshark dissector for any Photon traffic. The only Altspace-specific stuff (at this moment) is the enumeration of Altspace ENet channels.
 
-1) The dissector will add the "enet" protocol (which can be used to filter for just ENet packets).
+This is *not* almost a general-purpose ENet dissector -- Photon packages up multiple ENet commands into one UDP packet in a Photon-specific (and undocumented?) way, so Photon packets look somewhat different from ENet packets designed to carry only one command.
 
-2) Choose the UDP stream to dissect, choose "Decode As..." and select ENet
+To run: Execute wireshark with the command-line option "-X lua_script:<path to photon.lua>". Choose a Photon UDP packet to dissect, choose "Decode As..." and select ENet. (You might want to set it as the default decoder for UDP port 5056.)
+
+[enet-dissector]: https://github.com/cgutman/wireshark-enet-dissector
