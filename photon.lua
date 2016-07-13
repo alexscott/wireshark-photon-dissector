@@ -3,13 +3,6 @@
 -- TODO: support Photon CRC check
 -- TODO: enumerate possible command flags
 
--- PhotonProtocolHeader
-local pf_protoheader_peerid = ProtoField.uint16("photon.peerid", "Peer ID", base.HEX)
-local pf_protoheader_crcenabled = ProtoField.uint8("photon.crcenabled", "CRC enabled?", base.HEX)
-local pf_protoheader_commandcount = ProtoField.uint8("photon.commandcount", "Command count", base.DEC)
-local pf_protoheader_timeint = ProtoField.int32("photon.timeint", "Timestamp", base.DEC)
-local pf_protoheader_challenge = ProtoField.int32("photon.challenge", "Challenge", base.DEC)
-
  -- ENet commands 9, 10, and 11 aren't used in Photon AFAIK
 local command_types = {
    [1] = "Acknowledge",
@@ -26,73 +19,65 @@ local command_types = {
    [12] = "Fetch server timestamp"
 }
 
--- https://github.com/AltspaceVR/UnityClient/blob/master/Assets/Altspace/Scripts/Networking/PhotonChannel.cs#L9
-local channels = {
+-- Altspace application-specific Photon channels
+local channel_names = {
    [1] = "Photon view instantiation",
    [2] = "VoIP",
    [3] = "RPC",
    [4] = "Photon view serialization"
 }
 
--- PhotonProtocolCommandHeader
-local pf_cmdheader_commandtype = ProtoField.uint8("photon.commandtype", "Command type", base.DEC, command_types)
-local pf_cmdheader_channelid = ProtoField.uint8("photon.channelid", "Channel ID", base.DEC, channels)
-local pf_cmdheader_commandflags = ProtoField.uint8("photon.commandflags", "Command flags", base.HEX)
-local pf_cmdheader_reservedbyte = ProtoField.uint8("photon.reservedbyte", "Reserved byte", base.HEX)
-local pf_cmdheader_commandlength = ProtoField.int32("photon.commandlength", "Command length", base.DEC)
-local pf_cmdheader_relseqnum = ProtoField.int32("photon.relseqnum", "Reliable sequence number", base.DEC)
+local photon = Proto("photon", "Photon")
 
--- PhotonProtocolAcknowledge
-local pf_ack_recvrelseqnum = ProtoField.int32("photon.ack.recvrelseqnum", "Received reliable sequence number", base.DEC)
-local pf_ack_recvsenttime = ProtoField.int32("photon.ack.recvsenttime", "Received sent timestamp", base.DEC)
+-- protocol header, present once at the top of every packet
+local pf_protoheader_peerid = ProtoField.uint16("photon.peerid", "Peer ID", base.HEX)
+local pf_protoheader_crcenabled = ProtoField.uint8("photon.crcenabled", "CRC enabled", base.HEX)
+local pf_protoheader_commandcount = ProtoField.uint8("photon.commandcount", "Command count", base.DEC)
+local pf_protoheader_timeint = ProtoField.uint32("photon.timeint", "Timestamp", base.DEC)
+local pf_protoheader_challenge = ProtoField.int32("photon.challenge", "Challenge", base.DEC)
 
--- PhotonProtocolConnect
-local pf_conn_data = ProtoField.bytes("photon.conn.data", "Data", base.HEX)
+local pf_command = ProtoField.bytes("Command", "photon.command")
 
--- PhotonProtocolVerifyConnect
-local pf_connverify_data = ProtoField.bytes("photon.connverify.data", "Data", base.HEX)
+-- command header, present once at the top of each command in the packet
+local pf_cmdheader_commandtype = ProtoField.uint8("photon.command.type", "Command type", base.DEC, command_types)
+local pf_cmdheader_channelid = ProtoField.uint8("photon.command.channelid", "Channel ID", base.DEC, channel_names)
+local pf_cmdheader_commandflags = ProtoField.uint8("photon.command.flags", "Command flags", base.HEX)
+local pf_cmdheader_reservedbyte = ProtoField.uint8("photon.command.reservedbyte", "Reserved byte", base.HEX)
+local pf_cmdheader_commandlength = ProtoField.int32("photon.command.length", "Command length", base.DEC)
+local pf_cmdheader_relseqnum = ProtoField.int32("photon.command.relseqnum", "Reliable sequence number", base.DEC)
 
--- PhotonProtocolBandwidthLimit
-local pf_bwlimit_incomingbandwidth = ProtoField.uint32("photon.bwlimit.incomingbandwidth", "Incoming Bandwidth", base.HEX)
-local pf_bwlimit_outgoingbandwidth = ProtoField.uint32("photon.bwlimit.outgoingbandwidth", "Outgoing Bandwidth", base.HEX)
+-- acknowledgements
+local pf_ack_recvrelseqnum = ProtoField.int32("photon.command.ack_recvrelseqnum", "Received reliable sequence number", base.DEC)
+local pf_ack_recvsenttime = ProtoField.uint32("photon.command.ack_recvsenttime", "Received sent timestamp", base.DEC)
 
--- PhotonProtocolThrottleConfigure
-local pf_throttle_packetthrottleinterval = ProtoField.uint32("photon.throttle.packetthrottleinterval", "Packet Throttle Interval", base.HEX)
-local pf_throttle_packetthrottleaccel = ProtoField.uint32("photon.throttle.packetthrottleaccel", "Packet Throttle Acceleration", base.HEX)
-local pf_throttle_packetthrottledecel = ProtoField.uint32("photon.throttle.packetthrottledecel", "Packet Throttle Deceleration", base.HEX)
+-- connections
+local pf_conn_data = ProtoField.bytes("photon.command.conn_data", "Data", base.HEX)
 
--- PhotonProtocolDisconnect
+-- connection verifications
+local pf_connverify_data = ProtoField.bytes("photon.command.connverify_data", "Data", base.HEX)
 
--- PhotonProtocolPing
+-- reliable sends
+local pf_sendrel_data = ProtoField.bytes("photon.command.sendrel_data", "Data")
 
--- PhotonProtocolSendReliable
-local pf_sendrel_data = ProtoField.bytes("photon.sendrel.data", "Data")
+-- unreliable sends
+local pf_sendunrel_unrelseqnum = ProtoField.int32("photon.command.sendunrel_unrelseqnum", "Unreliable sequence number", base.DEC)
+local pf_sendunrel_data = ProtoField.bytes("photon.command.sendunrel_data", "Data")
 
--- PhotonProtocolSendUnreliable
-local pf_sendunrel_unrelseqnum = ProtoField.int32("photon.sendunrel.unrelseqnum", "Unreliable sequence number", base.DEC)
-local pf_sendunrel_data = ProtoField.bytes("photon.sendunrel.data", "Data")
+-- fragment sends
+local pf_sendfrag_startseqnum = ProtoField.int32("photon.command.sendfrag_startseqnum", "Start sequence number", base.DEC)
+local pf_sendfrag_fragcount = ProtoField.int32("photon.command.sendfrag_fragcount", "Fragment count", base.DEC)
+local pf_sendfrag_fragnum = ProtoField.int32("photon.command.sendfrag_fragnum", "Fragment number", base.DEC)
+local pf_sendfrag_totallen = ProtoField.int32("photon.command.sendfrag_totallen", "Total length", base.DEC)
+local pf_sendfrag_fragoff = ProtoField.int32("photon.command.sendfrag_fragoff", "Fragment offset", base.DEC)
+local pf_sendfrag_data = ProtoField.bytes("photon.command.sendfrag_data", "Data")
 
--- PhotonProtocolSendUnsequenced
-local pf_sendunseq_unseqgroup = ProtoField.int32("photon.sendunseq.unseqgroup", "Unsequenced Group", base.DEC)
-local pf_sendunseq_data = ProtoField.bytes("photon.sendunseq.data", "Data")
-
--- PhotonProtocolSendFragment
-local pf_sendfrag_startseqnum = ProtoField.int32("photon.sendfrag.startseqnum", "Start Sequence Number", base.DEC)
-local pf_sendfrag_fragcount = ProtoField.int32("photon.sendfrag.fragcount", "Fragment Count", base.DEC)
-local pf_sendfrag_fragnum = ProtoField.int32("photon.sendfrag.fragnum", "Fragment Number", base.DEC)
-local pf_sendfrag_totallen = ProtoField.int32("photon.sendfrag.totallen", "Total Length", base.DEC)
-local pf_sendfrag_fragoff = ProtoField.int32("photon.sendfrag.fragoff", "Fragment Offset", base.DEC)
-local pf_sendfrag_data = ProtoField.bytes("photon.sendfrag.data", "Data")
-
--- PhotonProtocolFetchServerTimestamp
-
-p_photon = Proto ("photon", "Photon")
-p_photon.fields = {
+photon.fields = {
     pf_protoheader_peerid,
     pf_protoheader_crcenabled,
     pf_protoheader_commandcount,
     pf_protoheader_timeint,
     pf_protoheader_challenge,
+    pf_command,
     pf_cmdheader_commandtype,
     pf_cmdheader_channelid,
     pf_cmdheader_commandflags,
@@ -103,16 +88,9 @@ p_photon.fields = {
     pf_ack_recvsenttime,
     pf_conn_data,
     pf_connverify_data,
-    pf_bwlimit_incomingbandwidth,
-    pf_bwlimit_outgoingbandwidth,
-    pf_throttle_packetthrottleinterval,
-    pf_throttle_packetthrottleaccel,
-    pf_throttle_packetthrottledecel,
     pf_sendrel_data,
     pf_sendunrel_unrelseqnum,
     pf_sendunrel_data,
-    pf_sendunseq_unseqgroup,
-    pf_sendunseq_data,
     pf_sendfrag_startseqnum,
     pf_sendfrag_fragcount,
     pf_sendfrag_fragnum,
@@ -121,127 +99,95 @@ p_photon.fields = {
     pf_sendfrag_data
 }
 
-function p_photon.dissector(buf, pkt, root)
-    pkt.cols.protocol = p_photon.name
+local command_count_field = Field.new("photon.commandcount")
+local command_type_field = Field.new("photon.command.type")
+local command_length_field = Field.new("photon.command.length")
 
-    local proto_tree = root:add(p_photon, buf(0))
-    local i = 0
+-- Reads ENet command number `num` from a Photon packet stored in `buf`, starting at `idx`.
+-- Returns the next index after the command is read.
+function read_command(buf, idx, num, root)
 
-    -- Read the protocol header
-    proto_tree:add(pf_protoheader_peerid, buf(i, 2), buf(i, 2):uint())
-    i = i + 2
-    proto_tree:add(pf_protoheader_crcenabled, buf(i, 1), buf(i, 1):uint())
-    i = i + 1
+   local command_header_length = 12
+   local tree = root:add(pf_command, command_header_length, string.format("Command #%s", num))
+   tree:add(pf_cmdheader_commandtype, buf(idx, 1))
+   tree:add(pf_cmdheader_channelid, buf(idx + 1, 1))
+   tree:add(pf_cmdheader_commandflags, buf(idx + 2, 1))
+   tree:add(pf_cmdheader_reservedbyte, buf(idx + 3, 1))
+   tree:add(pf_cmdheader_commandlength, buf(idx + 4, 4))
+   tree:add(pf_cmdheader_relseqnum, buf(idx + 8, 4))
 
-    local command_count = buf(i, 1):uint()
-    proto_tree:add(pf_protoheader_commandcount, buf(i, 1), buf(i, 1):uint())
-    i = i + 1
-    proto_tree:add(pf_protoheader_timeint, buf(i, 4), buf(i, 4):int())
-    i = i + 4
-    proto_tree:add(pf_protoheader_challenge, buf(i, 4), buf(i, 4):int())
-    i = i + 4
+   local command_type_info = select(num, command_type_field())
+   local command_length_info = select(num, command_length_field())
 
-    for command_number=1,command_count do
+   tree:append_text(string.format(" - %s", command_type_info.display))
+   tree:set_len(command_length_info() + command_header_length)
 
-       -- Read the command header
-       local command = buf(i, 1):uint()
-       local command_name = command_types[command] or "Unknown"
-       local command_tree = proto_tree:add(string.format("Command #%s (%s)", command_number, command_name))
+   local command = command_type_info()
+   local command_length = command_length_info()
+   idx = idx + command_header_length
 
-       command_tree:add(pf_cmdheader_commandtype, buf(i, 1), buf(i, 1):uint())
-       i = i + 1
-       command_tree:add(pf_cmdheader_channelid, buf(i, 1), buf(i, 1):uint())
-       i = i + 1
-       command_tree:add(pf_cmdheader_commandflags, buf(i, 1), buf(i, 1):uint())
-       i = i + 1
-       command_tree:add(pf_cmdheader_reservedbyte, buf(i, 1), buf(i, 1):uint())
-       i = i + 1
+   if command == 1 then
+      local command_meta_length = 8
+      tree:add(pf_ack_recvrelseqnum, buf(idx, 4))
+      tree:add(pf_ack_recvsenttime, buf(idx + 4, 4))
+      return idx + command_meta_length
+   elseif command == 2 then
+      -- TODO: figure out what these bytes are
+      local data_length = command_length - command_header_length
+      tree:add(pf_conn_data, buf(idx, data_length))
+      return idx + data_length
+   elseif command == 3 then
+      -- TODO: figure out what these bytes are
+      local data_length = command_length - command_header_length
+      tree:add(pf_connverify_data, buf(idx, data_length))
+      return idx + data_length
+   elseif command == 6 then
+      local data_length = command_length - command_header_length
+      tree:add(pf_sendrel_data, buf(idx, data_length))
+      return idx + data_length
+   elseif command == 7 then
+      local command_meta_length = 4
+      tree:add(pf_sendunrel_unrelseqnum, buf(idx, 4))
+      local data_length = command_length - command_header_length - command_meta_length
+      tree:add(pf_sendunrel_data, buf(idx + command_meta_length, data_length))
+      return idx + data_length + command_meta_length
+   elseif command == 8 then
+      local command_meta_length = 20
+      tree:add(pf_sendfrag_startseqnum, buf(idx, 4))
+      tree:add(pf_sendfrag_fragcount, buf(idx + 4, 4))
+      tree:add(pf_sendfrag_fragnum, buf(idx + 8, 4))
+      tree:add(pf_sendfrag_totallen, buf(idx + 12, 4))
+      tree:add(pf_sendfrag_fragoff, buf(idx + 16, 4))
+      local data_length = command_length - command_header_length - command_meta_length
+      tree:add(pf_sendfrag_data, buf(idx + command_meta_length, data_length))
+      return idx + data_length + command_meta_length
+   else
+      return idx
+   end
+end
 
-       local command_length = buf(i, 4):int()
-       command_tree:add(pf_cmdheader_commandlength, buf(i, 4), buf(i, 4):int())
-       i = i + 4
-       command_tree:add(pf_cmdheader_relseqnum, buf(i, 4), buf(i, 4):int())
-       i = i + 4
+function photon.dissector(buf, pkt, root)
+    pkt.cols.protocol = "Photon"
+    local pktlen = buf:reported_length_remaining()
+    local tree = root:add(photon, buf:range(0, pktlen))
 
-       local command_headers_length = 12
+    -- read the protocol header
+    local proto_header_len = 12
+    tree:add(pf_protoheader_peerid, buf(0, 2))
+    tree:add(pf_protoheader_crcenabled, buf(2, 1))
+    tree:add(pf_protoheader_commandcount, buf(3, 1))
+    tree:add(pf_protoheader_timeint, buf(4, 4))
+    tree:add(pf_protoheader_challenge, buf(8, 4))
 
-       if command == 1 then
-          -- PhotonProtocolAcknowledge
-          command_tree:add(pf_ack_recvrelseqnum, buf(i, 4), buf(i, 4):int())
-          i = i + 4
-          command_tree:add(pf_ack_recvsenttime, buf(i, 4), buf(i, 4):int())
-          i = i + 4
-       elseif command == 2 then
-          -- PhotonProtocolConnect
-          -- TODO: figure out what these bytes are
-          local data_length = command_length - command_headers_length
-          command_tree:add(pf_conn_data, buf(i, data_length))
-          i = i + data_length
-       elseif command == 3 then
-          -- PhotonProtocolVerifyConnect
-          -- TODO: figure out what these bytes are
-          local data_length = command_length - command_headers_length
-          command_tree:add(pf_connverify_data, buf(i, data_length))
-          i = i + data_length
-       elseif command == 4 then
-          -- PhotonProtocolDisconnect
-       elseif command == 5 then
-          -- PhotonProtocolPing
-       elseif command == 6 then
-          -- PhotonProtocolSendReliable
-          local data_length = command_length - command_headers_length
-          command_tree:add(pf_sendrel_data, buf(i, data_length))
-          i = i + data_length
-       elseif command == 7 then
-          -- PhotonProtocolSendUnreliable
-          command_tree:add(pf_sendunrel_unrelseqnum, buf(i, 4), buf(i, 4):int())
-          i = i + 4
-          local data_length = command_length - command_headers_length - 4
-          command_tree:add(pf_sendunrel_data, buf(i, data_length))
-          i = i + data_length
-       elseif command == 8 then
-          -- PhotonProtocolSendFragment
-          command_tree:add(pf_sendfrag_startseqnum, buf(i, 4), buf(i, 4):int())
-          i = i + 4
-          command_tree:add(pf_sendfrag_fragcount, buf(i, 4), buf(i, 4):int())
-          i = i + 4
-          command_tree:add(pf_sendfrag_fragnum, buf(i, 4), buf(i, 4):int())
-          i = i + 4
-          command_tree:add(pf_sendfrag_totallen, buf(i, 4), buf(i, 4):int())
-          i = i + 4
-          command_tree:add(pf_sendfrag_fragoff, buf(i, 4), buf(i, 4):int())
-          i = i + 4
-          local data_length = command_length - command_headers_length - 20
-          command_tree:add(pf_sendfrag_data, buf(i, data_length))
-          i = i + data_length
-       elseif command == 9 then
-          -- PhotonProtocolSendUnsequenced
-          command_tree:add(pf_sendunseq_unseqgroup, buf(i, 4), buf(i, 4):int())
-          i = i + 4
-          local data_length = command_length - command_headers_length - 4
-          command_tree:add(pf_sendunseq_data, buf(i, data_length))
-          i = i + data_length
-       elseif command == 10 then
-          -- PhotonProtocolBandwidthLimit
-          command_tree:add(pf_bwlimit_incomingbandwidth, buf(i, 4), buf(i, 4):uint())
-          i = i + 4
-          command_tree:add(pf_bwlimit_outgoingbandwidth, buf(i, 4), buf(i, 4):uint())
-          i = i + 4
-       elseif command == 11 then
-          -- PhotonProtocolThrottleConfigure
-          command_tree:add(pf_throttle_packetthrottleinterval, buf(i, 4), buf(i, 4):uint())
-          i = i + 4
-          command_tree:add(pf_throttle_packetthrottleaccel, buf(i, 4), buf(i, 4):uint())
-          i = i + 4
-          command_tree:add(pf_throttle_packetthrottledecel, buf(i, 4), buf(i, 4):uint())
-          i = i + 4
-       elseif command == 12 then
-          -- PhotonProtocolFetchServerTimestamp
-       end
+    tree:append_text(string.format(", %s command(s)", command_count_field().display))
+
+    -- read command_count commands
+    local idx = proto_header_len
+    for num=1,command_count_field()() do
+       idx = read_command(buf, idx, num, tree)
     end
+
+    return idx
 end
 
-function p_photon.init()
-end
-
-DissectorTable.get("udp.port"):add(5056, p_photon)
+DissectorTable.get("udp.port"):add(5056, photon)
