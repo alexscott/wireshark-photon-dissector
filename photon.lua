@@ -43,8 +43,8 @@ local pf_cmdheader_commandlength = ProtoField.int32("enet.commandlength", "Comma
 local pf_cmdheader_relseqnum = ProtoField.int32("enet.relseqnum", "Reliable sequence number", base.DEC)
 
 -- ENetProtocolAcknowledge
-local pf_ack_recvrelseqnum = ProtoField.uint16("enet.ack.recvrelseqnum", "Received Reliable Sequence Number", base.HEX)
-local pf_ack_recvsenttime = ProtoField.uint16("enet.ack.recvsenttime", "Received Sent Time", base.HEX)
+local pf_ack_recvrelseqnum = ProtoField.int32("enet.ack.recvrelseqnum", "Received reliable sequence number", base.DEC)
+local pf_ack_recvsenttime = ProtoField.int32("enet.ack.recvsenttime", "Received sent timestamp", base.DEC)
 
 -- ENetProtocolConnect
 local pf_conn_outgoingpeerid = ProtoField.uint16("enet.conn.outgoingpeerid", "Outgoing Peer ID", base.HEX)
@@ -93,7 +93,7 @@ local pf_disconn_data = ProtoField.uint32("enet.disconn.data", "Data", base.HEX)
 local pf_sendrel_data = ProtoField.bytes("enet.sendrel.data", "Data")
 
 -- ENetProtocolSendUnreliable
-local pf_sendunrel_unrelseqnum = ProtoField.int32("enet.sendunrel.unrelseqnum", "Unreliable Sequence Number", base.DEC)
+local pf_sendunrel_unrelseqnum = ProtoField.int32("enet.sendunrel.unrelseqnum", "Unreliable sequence number", base.DEC)
 local pf_sendunrel_data = ProtoField.bytes("enet.sendunrel.data", "Data")
 
 -- ENetProtocolSendUnsequenced
@@ -212,11 +212,13 @@ function p_enet.dissector(buf, pkt, root)
        local data_length = command_length - 12 -- sizeof(command headers)
 
        if command == 1 then
-          command_tree:add(pf_ack_recvrelseqnum, buf(i, 2), buf(i, 2):uint())
-          i = i + 2
-          command_tree:add(pf_ack_recvsenttime, buf(i, 2), buf(i, 2):uint())
-          i = i + 2
+          -- ENetProtocolAcknowledge
+          command_tree:add(pf_ack_recvrelseqnum, buf(i, 4), buf(i, 4):int())
+          i = i + 4
+          command_tree:add(pf_ack_recvsenttime, buf(i, 4), buf(i, 4):int())
+          i = i + 4
        elseif command == 2 then
+          -- ENetProtocolConnect
           command_tree:add(pf_conn_outgoingpeerid, buf(i, 2), buf(i, 2):uint())
           i = i + 2
           command_tree:add(pf_conn_incomingsessionid, buf(i, 1), buf(i, 1):uint())
@@ -244,6 +246,7 @@ function p_enet.dissector(buf, pkt, root)
           command_tree:add(pf_conn_data, buf(i, 4), buf(i, 4):uint())
           i = i + 4
        elseif command == 3 then
+          -- ENetProtocolVerifyConnect
           command_tree:add(pf_connverify_outgoingpeerid, buf(i, 2), buf(i, 2):uint())
           i = i + 2
           command_tree:add(pf_connverify_incomingsessionid, buf(i, 1), buf(i, 1):uint())
@@ -271,6 +274,7 @@ function p_enet.dissector(buf, pkt, root)
        elseif command == 4 then
           -- ENetProtocolDisconnect
           command_tree:add(pf_disconn_data, buf(i, 4), buf(i, 4):int())
+          i = i + 4
        elseif command == 5 then
           -- ENetProtocolPing
        elseif command == 6 then
