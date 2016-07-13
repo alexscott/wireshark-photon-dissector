@@ -10,6 +10,22 @@ local pf_protoheader_commandcount = ProtoField.uint8("enet.commandcount", "Comma
 local pf_protoheader_timeint = ProtoField.int32("enet.timeint", "Timestamp", base.DEC)
 local pf_protoheader_challenge = ProtoField.int32("enet.challenge", "Challenge", base.DEC)
 
+ -- ENet commands 9, 10, and 11 aren't used in Photon AFAIK
+local command_types = {
+   [1] = "Acknowledge",
+   [2] = "Connect",
+   [3] = "Verify connect",
+   [4] = "Disconnect",
+   [5] = "Ping",
+   [6] = "Send reliable",
+   [7] = "Send unreliable",
+   [8] = "Send reliable fragment",
+   [9] = "Send unsequenced",
+   [10] = "Configure bandwidth limit",
+   [11] = "Configure throttling",
+   [12] = "Fetch server timestamp"
+}
+
 -- https://github.com/AltspaceVR/UnityClient/blob/master/Assets/Altspace/Scripts/Networking/PhotonChannel.cs#L9
 local channels = {
    [1] = "Photon view instantiation",
@@ -19,7 +35,7 @@ local channels = {
 }
 
 -- ENetProtocolCommandHeader
-local pf_cmdheader_commandtype = ProtoField.uint8("enet.commandtype", "Command type", base.DEC)
+local pf_cmdheader_commandtype = ProtoField.uint8("enet.commandtype", "Command type", base.DEC, command_types)
 local pf_cmdheader_channelid = ProtoField.uint8("enet.channelid", "Channel ID", base.DEC, channels)
 local pf_cmdheader_commandflags = ProtoField.uint8("enet.commandflags", "Command flags", base.HEX)
 local pf_cmdheader_reservedbyte = ProtoField.uint8("enet.reservedbyte", "Reserved byte", base.HEX)
@@ -173,11 +189,11 @@ function p_enet.dissector(buf, pkt, root)
 
     for command_number=1,command_count do
 
-       local command_name = string.format("Command #%s", command_number)
-       local command_tree = proto_tree:add(command_name)
-
        -- Read the command header
        local command = buf(i, 1):uint()
+       local command_name = command_types[command] or "Unknown"
+       local command_tree = proto_tree:add(string.format("Command #%s (%s)", command_number, command_name))
+
        command_tree:add(pf_cmdheader_commandtype, buf(i, 1), buf(i, 1):uint())
        i = i + 1
        command_tree:add(pf_cmdheader_channelid, buf(i, 1), buf(i, 1):uint())
@@ -195,7 +211,6 @@ function p_enet.dissector(buf, pkt, root)
 
        local data_length = command_length - 12 -- sizeof(command headers)
 
-       command = bit.band(command, 0xF)
        if command == 1 then
           command_tree:add(pf_ack_recvrelseqnum, buf(i, 2), buf(i, 2):uint())
           i = i + 2
