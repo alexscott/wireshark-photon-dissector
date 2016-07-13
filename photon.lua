@@ -28,12 +28,10 @@ local pf_cmdheader_commandlength = ProtoField.int32("enet.commandlength", "Comma
 local pf_cmdheader_relseqnum = ProtoField.int32("enet.relseqnum", "Reliable sequence number", base.DEC)
 
 -- ENetProtocolAcknowledge
-local pf_ack = ProtoField.bytes("enet.ack", "Acknowledge")
 local pf_ack_recvrelseqnum = ProtoField.uint16("enet.ack.recvrelseqnum", "Received Reliable Sequence Number", base.HEX)
 local pf_ack_recvsenttime = ProtoField.uint16("enet.ack.recvsenttime", "Received Sent Time", base.HEX)
 
 -- ENetProtocolConnect
-local pf_conn = ProtoField.bytes("enet.conn", "Connect")
 local pf_conn_outgoingpeerid = ProtoField.uint16("enet.conn.outgoingpeerid", "Outgoing Peer ID", base.HEX)
 local pf_conn_incomingsessionid = ProtoField.uint8("enet.conn.incomingsessionid", "Incoming Session ID", base.HEX)
 local pf_conn_outgoingsessionid = ProtoField.uint8("enet.conn.outgoingsessionid", "Outgoing Session ID", base.HEX)
@@ -49,7 +47,6 @@ local pf_conn_connectid = ProtoField.uint32("enet.conn.connectid", "Connect ID",
 local pf_conn_data = ProtoField.uint32("enet.conn.data", "Data", base.HEX)
 
 -- ENetProtocolVerifyConnect
-local pf_connverify = ProtoField.bytes("enet.connverify", "Verify Connect")
 local pf_connverify_outgoingpeerid = ProtoField.uint16("enet.connverify.outgoingpeerid", "Outgoing Peer ID", base.HEX)
 local pf_connverify_incomingsessionid = ProtoField.uint8("enet.connverify.incomingsessionid", "Incoming Session ID", base.HEX)
 local pf_connverify_outgoingsessionid = ProtoField.uint8("enet.connverify.outgoingsessionid", "Outgoing Session ID", base.HEX)
@@ -64,39 +61,31 @@ local pf_connverify_packetthrottledecel = ProtoField.uint32("enet.connverify.pac
 local pf_connverify_connectid = ProtoField.uint32("enet.connverify.connectid", "Connect ID", base.HEX)
 
 -- ENetProtocolBandwidthLimit
-local pf_bwlimit = ProtoField.bytes("enet.bwlimit", "Bandwidth Limit")
 local pf_bwlimit_incomingbandwidth = ProtoField.uint32("enet.bwlimit.incomingbandwidth", "Incoming Bandwidth", base.HEX)
 local pf_bwlimit_outgoingbandwidth = ProtoField.uint32("enet.bwlimit.outgoingbandwidth", "Outgoing Bandwidth", base.HEX)
 
 -- ENetProtocolThrottleConfigure
-local pf_throttle = ProtoField.bytes("enet.throttle", "Throttle Configure")
 local pf_throttle_packetthrottleinterval = ProtoField.uint32("enet.throttle.packetthrottleinterval", "Packet Throttle Interval", base.HEX)
 local pf_throttle_packetthrottleaccel = ProtoField.uint32("enet.throttle.packetthrottleaccel", "Packet Throttle Acceleration", base.HEX)
 local pf_throttle_packetthrottledecel = ProtoField.uint32("enet.throttle.packetthrottledecel", "Packet Throttle Deceleration", base.HEX)
 
 -- ENetProtocolDisconnect
-local pf_disconn = ProtoField.bytes("enet.disconn", "Disconnect")
 local pf_disconn_data = ProtoField.uint32("enet.disconn.data", "Data", base.HEX)
 
 -- ENetProtocolPing
-local pf_ping = ProtoField.bytes("enet.ping", "Ping")
 
 -- ENetProtocolSendReliable
-local pf_sendrel = ProtoField.bytes("enet.sendrel", "Send Reliable")
 local pf_sendrel_data = ProtoField.bytes("enet.sendrel.data", "Data")
 
 -- ENetProtocolSendUnreliable
-local pf_sendunrel = ProtoField.bytes("enet.sendunrel", "Send Unreliable")
 local pf_sendunrel_unrelseqnum = ProtoField.int32("enet.sendunrel.unrelseqnum", "Unreliable Sequence Number", base.DEC)
 local pf_sendunrel_data = ProtoField.bytes("enet.sendunrel.data", "Data")
 
 -- ENetProtocolSendUnsequenced
-local pf_sendunseq = ProtoField.bytes("enet.sendunseq", "Send Unsequenced")
 local pf_sendunseq_unseqgroup = ProtoField.int32("enet.sendunseq.unseqgroup", "Unsequenced Group", base.DEC)
 local pf_sendunseq_data = ProtoField.bytes("enet.sendunseq.data", "Data")
 
 -- ENetProtocolSendFragment
-local pf_sendfrag = ProtoField.bytes("enet.sendfrag", "Send Fragment")
 local pf_sendfrag_startseqnum = ProtoField.int32("enet.sendfrag.startseqnum", "Start Sequence Number", base.DEC)
 local pf_sendfrag_fragcount = ProtoField.int32("enet.sendfrag.fragcount", "Fragment Count", base.DEC)
 local pf_sendfrag_fragnum = ProtoField.int32("enet.sendfrag.fragnum", "Fragment Number", base.DEC)
@@ -117,10 +106,8 @@ p_enet.fields = {
     pf_cmdheader_reservedbyte,
     pf_cmdheader_commandlength,
     pf_cmdheader_relseqnum,
-    pf_ack,
     pf_ack_recvrelseqnum,
     pf_ack_recvsenttime,
-    pf_conn,
     pf_conn_outgoingpeerid,
     pf_conn_incomingsessionid,
     pf_conn_outgoingsessionid,
@@ -134,7 +121,6 @@ p_enet.fields = {
     pf_conn_packetthrottledecel,
     pf_conn_connectid,
     pf_conn_data,
-    pf_connverify,
     pf_connverify_outgoingpeerid,
     pf_connverify_incomingsessionid,
     pf_connverify_outgoingsessionid,
@@ -147,25 +133,17 @@ p_enet.fields = {
     pf_connverify_packetthrottleaccel,
     pf_connverify_packetthrottledecel,
     pf_connverify_connectid,
-    pf_bwlimit,
     pf_bwlimit_incomingbandwidth,
     pf_bwlimit_outgoingbandwidth,
-    pf_throttle,
     pf_throttle_packetthrottleinterval,
     pf_throttle_packetthrottleaccel,
     pf_throttle_packetthrottledecel,
-    pf_disconn,
     pf_disconn_data,
-    pf_ping,
-    pf_sendrel,
     pf_sendrel_data,
-    pf_sendunrel,
     pf_sendunrel_unrelseqnum,
     pf_sendunrel_data,
-    pf_sendunseq,
     pf_sendunseq_unseqgroup,
     pf_sendunseq_data,
-    pf_sendfrag,
     pf_sendfrag_startseqnum,
     pf_sendfrag_fragcount,
     pf_sendfrag_fragnum,
@@ -177,168 +155,160 @@ p_enet.fields = {
 function p_enet.dissector(buf, pkt, root)
     pkt.cols.protocol = p_enet.name
 
-    subtree = root:add(p_enet, buf(0))
-    i = 0
+    local proto_tree = root:add(p_enet, buf(0))
+    local i = 0
 
     -- Read the protocol header
-    subtree:add(pf_protoheader_peerid, buf(i, 2), buf(i, 2):uint())
+    proto_tree:add(pf_protoheader_peerid, buf(i, 2), buf(i, 2):uint())
     i = i + 2
-    subtree:add(pf_protoheader_crcenabled, buf(i, 1), buf(i, 1):uint())
-    i = i + 1
-    subtree:add(pf_protoheader_commandcount, buf(i, 1), buf(i, 1):uint())
-    i = i + 1
-    subtree:add(pf_protoheader_timeint, buf(i, 4), buf(i, 4):int())
-    i = i + 4
-    subtree:add(pf_protoheader_challenge, buf(i, 4), buf(i, 4):int())
-    i = i + 4
-
-    -- Read the command header
-    command = buf(i, 1):uint()
-    subtree:add(pf_cmdheader_commandtype, buf(i, 1), buf(i, 1):uint())
-    i = i + 1
-    subtree:add(pf_cmdheader_channelid, buf(i, 1), buf(i, 1):uint())
-    i = i + 1
-    subtree:add(pf_cmdheader_commandflags, buf(i, 1), buf(i, 1):uint())
-    i = i + 1
-    subtree:add(pf_cmdheader_reservedbyte, buf(i, 1), buf(i, 1):uint())
+    proto_tree:add(pf_protoheader_crcenabled, buf(i, 1), buf(i, 1):uint())
     i = i + 1
 
-    command_length = buf(i, 4):int()
-    subtree:add(pf_cmdheader_commandlength, buf(i, 4), buf(i, 4):int())
+    local command_count = buf(i, 1):uint()
+    proto_tree:add(pf_protoheader_commandcount, buf(i, 1), buf(i, 1):uint())
+    i = i + 1
+    proto_tree:add(pf_protoheader_timeint, buf(i, 4), buf(i, 4):int())
     i = i + 4
-    subtree:add(pf_cmdheader_relseqnum, buf(i, 4), buf(i, 4):int())
+    proto_tree:add(pf_protoheader_challenge, buf(i, 4), buf(i, 4):int())
     i = i + 4
 
-    data_length = command_length - 12 -- sizeof(command headers)
+    for command_number=1,command_count do
 
-    command = bit.band(command, 0xF)
-    if command == 1 then
-        -- ENetProtocolAcknowledge
-        subtree:add(pf_ack, buf(0))
+       local command_name = string.format("Command #%s", command_number)
+       local command_tree = proto_tree:add(command_name)
 
-        subtree:add(pf_ack_recvrelseqnum, buf(i, 2), buf(i, 2):uint())
-        i = i + 2
-        subtree:add(pf_ack_recvsenttime, buf(i, 2), buf(i, 2):uint())
-        i = i + 2
-    elseif command == 2 then
-        -- ENetProtocolConnect
-        subtree:add(pf_conn, buf(0))
+       -- Read the command header
+       local command = buf(i, 1):uint()
+       command_tree:add(pf_cmdheader_commandtype, buf(i, 1), buf(i, 1):uint())
+       i = i + 1
+       command_tree:add(pf_cmdheader_channelid, buf(i, 1), buf(i, 1):uint())
+       i = i + 1
+       command_tree:add(pf_cmdheader_commandflags, buf(i, 1), buf(i, 1):uint())
+       i = i + 1
+       command_tree:add(pf_cmdheader_reservedbyte, buf(i, 1), buf(i, 1):uint())
+       i = i + 1
 
-        subtree:add(pf_conn_outgoingpeerid, buf(i, 2), buf(i, 2):uint())
-        i = i + 2
-        subtree:add(pf_conn_incomingsessionid, buf(i, 1), buf(i, 1):uint())
-        i = i + 1
-        subtree:add(pf_conn_outgoingsessionid, buf(i, 1), buf(i, 1):uint())
-        i = i + 1
-        subtree:add(pf_conn_mtu, buf(i, 4), buf(i, 4):uint())
-        i = i + 4
-        subtree:add(pf_conn_windowsize, buf(i, 4), buf(i, 4):uint())
-        i = i + 4
-        subtree:add(pf_conn_channelcount, buf(i, 4), buf(i, 4):uint())
-        i = i + 4
-        subtree:add(pf_conn_incomingbandwidth, buf(i, 4), buf(i, 4):uint())
-        i = i + 4
-        subtree:add(pf_conn_outgoingbandwidth, buf(i, 4), buf(i, 4):uint())
-        i = i + 4
-        subtree:add(pf_conn_packetthrottleinterval, buf(i, 4), buf(i, 4):uint())
-        i = i + 4
-        subtree:add(pf_conn_packetthrottleaccel, buf(i, 4), buf(i, 4):uint())
-        i = i + 4
-        subtree:add(pf_conn_packetthrottledecel, buf(i, 4), buf(i, 4):uint())
-        i = i + 4
-        subtree:add(pf_conn_connectid, buf(i, 4), buf(i, 4):uint())
-        i = i + 4
-        subtree:add(pf_conn_data, buf(i, 4), buf(i, 4):uint())
-        i = i + 4
-    elseif command == 3 then
-        -- ENetProtocolVerifyConnect
-        subtree:add(pf_connverify, buf(0))
+       local command_length = buf(i, 4):int()
+       command_tree:add(pf_cmdheader_commandlength, buf(i, 4), buf(i, 4):int())
+       i = i + 4
+       command_tree:add(pf_cmdheader_relseqnum, buf(i, 4), buf(i, 4):int())
+       i = i + 4
 
-        subtree:add(pf_connverify_outgoingpeerid, buf(i, 2), buf(i, 2):uint())
-        i = i + 2
-        subtree:add(pf_connverify_incomingsessionid, buf(i, 1), buf(i, 1):uint())
-        i = i + 1
-        subtree:add(pf_connverify_outgoingsessionid, buf(i, 1), buf(i, 1):uint())
-        i = i + 1
-        subtree:add(pf_connverify_mtu, buf(i, 4), buf(i, 4):uint())
-        i = i + 4
-        subtree:add(pf_connverify_windowsize, buf(i, 4), buf(i, 4):uint())
-        i = i + 4
-        subtree:add(pf_connverify_channelcount, buf(i, 4), buf(i, 4):uint())
-        i = i + 4
-        subtree:add(pf_connverify_incomingbandwidth, buf(i, 4), buf(i, 4):uint())
-        i = i + 4
-        subtree:add(pf_connverify_outgoingbandwidth, buf(i, 4), buf(i, 4):uint())
-        i = i + 4
-        subtree:add(pf_connverify_packetthrottleinterval, buf(i, 4), buf(i, 4):uint())
-        i = i + 4
-        subtree:add(pf_connverify_packetthrottleaccel, buf(i, 4), buf(i, 4):uint())
-        i = i + 4
-        subtree:add(pf_connverify_packetthrottledecel, buf(i, 4), buf(i, 4):uint())
-        i = i + 4
-        subtree:add(pf_connverify_connectid, buf(i, 4), buf(i, 4):uint())
-        i = i + 4
-    elseif command == 4 then
-        -- ENetProtocolDisconnect
-        subtree:add(pf_disconn, buf(0))
+       local data_length = command_length - 12 -- sizeof(command headers)
 
-        subtree:add(pf_disconn_data, buf(i, 4), buf(i, 4):int())
-    elseif command == 5 then
-        -- ENetProtocolPing
-        subtree:add(pf_ping, buf(0))
-    elseif command == 6 then
-        -- ENetProtocolSendReliable
-        subtree:add(pf_sendrel, buf(0))
-        subtree:add(pf_sendrel_data, buf(i, command_length))
-    elseif command == 7 then
-        -- ENetProtocolSendUnreliable
-        subtree:add(pf_sendunrel, buf(0))
-        subtree:add(pf_sendunrel_unrelseqnum, buf(i, 4), buf(i, 4):int())
-        i = i + 4
-        data_length = data_length - 4
-        subtree:add(pf_sendunrel_data, buf(i, data_length))
-    elseif command == 8 then
-        -- ENetProtocolSendFragment
-        subtree:add(pf_sendfrag, buf(0))
-        subtree:add(pf_sendfrag_startseqnum, buf(i, 4), buf(i, 4):int())
-        i = i + 4
-        subtree:add(pf_sendfrag_fragcount, buf(i, 4), buf(i, 4):int())
-        i = i + 4
-        subtree:add(pf_sendfrag_fragnum, buf(i, 4), buf(i, 4):int())
-        i = i + 4
-        subtree:add(pf_sendfrag_totallen, buf(i, 4), buf(i, 4):int())
-        i = i + 4
-        subtree:add(pf_sendfrag_fragoff, buf(i, 4), buf(i, 4):int())
-        i = i + 4
-        data_length = data_length - 20
-        subtree:add(pf_sendfrag_data, buf(i, data_length))
-    elseif command == 9 then
-        -- ENetProtocolSendUnsequenced
-        subtree:add(pf_sendunseq, buf(0))
-        subtree:add(pf_sendunseq_unseqgroup, buf(i, 4), buf(i, 4):int())
-        i = i + 4
-        data_length = data_length - 4
-        subtree:add(pf_sendunseq_data, buf(i, command_length))
-    elseif command == 10 then
-        -- ENetProtocolBandwidthLimit
-        subtree:add(pf_bwlimit, buf(0))
-
-        subtree:add(pf_bwlimit_incomingbandwidth, buf(i, 4), buf(i, 4):uint())
-        i = i + 4
-        subtree:add(pf_bwlimit_outgoingbandwidth, buf(i, 4), buf(i, 4):uint())
-        i = i + 4
-    elseif command == 11 then
-        -- ENetProtocolThrottleConfigure
-        subtree:add(pf_throttle, buf(0))
-
-        subtree:add(pf_throttle_packetthrottleinterval, buf(i, 4), buf(i, 4):uint())
-        i = i + 4
-        subtree:add(pf_throttle_packetthrottleaccel, buf(i, 4), buf(i, 4):uint())
-        i = i + 4
-        subtree:add(pf_throttle_packetthrottledecel, buf(i, 4), buf(i, 4):uint())
-        i = i + 4
-    elseif command == 12 then
-        -- TODO: ENetProtocolSendUnreliableFragment
+       command = bit.band(command, 0xF)
+       if command == 1 then
+          command_tree:add(pf_ack_recvrelseqnum, buf(i, 2), buf(i, 2):uint())
+          i = i + 2
+          command_tree:add(pf_ack_recvsenttime, buf(i, 2), buf(i, 2):uint())
+          i = i + 2
+       elseif command == 2 then
+          command_tree:add(pf_conn_outgoingpeerid, buf(i, 2), buf(i, 2):uint())
+          i = i + 2
+          command_tree:add(pf_conn_incomingsessionid, buf(i, 1), buf(i, 1):uint())
+          i = i + 1
+          command_tree:add(pf_conn_outgoingsessionid, buf(i, 1), buf(i, 1):uint())
+          i = i + 1
+          command_tree:add(pf_conn_mtu, buf(i, 4), buf(i, 4):uint())
+          i = i + 4
+          command_tree:add(pf_conn_windowsize, buf(i, 4), buf(i, 4):uint())
+          i = i + 4
+          command_tree:add(pf_conn_channelcount, buf(i, 4), buf(i, 4):uint())
+          i = i + 4
+          command_tree:add(pf_conn_incomingbandwidth, buf(i, 4), buf(i, 4):uint())
+          i = i + 4
+          command_tree:add(pf_conn_outgoingbandwidth, buf(i, 4), buf(i, 4):uint())
+          i = i + 4
+          command_tree:add(pf_conn_packetthrottleinterval, buf(i, 4), buf(i, 4):uint())
+          i = i + 4
+          command_tree:add(pf_conn_packetthrottleaccel, buf(i, 4), buf(i, 4):uint())
+          i = i + 4
+          command_tree:add(pf_conn_packetthrottledecel, buf(i, 4), buf(i, 4):uint())
+          i = i + 4
+          command_tree:add(pf_conn_connectid, buf(i, 4), buf(i, 4):uint())
+          i = i + 4
+          command_tree:add(pf_conn_data, buf(i, 4), buf(i, 4):uint())
+          i = i + 4
+       elseif command == 3 then
+          command_tree:add(pf_connverify_outgoingpeerid, buf(i, 2), buf(i, 2):uint())
+          i = i + 2
+          command_tree:add(pf_connverify_incomingsessionid, buf(i, 1), buf(i, 1):uint())
+          i = i + 1
+          command_tree:add(pf_connverify_outgoingsessionid, buf(i, 1), buf(i, 1):uint())
+          i = i + 1
+          command_tree:add(pf_connverify_mtu, buf(i, 4), buf(i, 4):uint())
+          i = i + 4
+          command_tree:add(pf_connverify_windowsize, buf(i, 4), buf(i, 4):uint())
+          i = i + 4
+          command_tree:add(pf_connverify_channelcount, buf(i, 4), buf(i, 4):uint())
+          i = i + 4
+          command_tree:add(pf_connverify_incomingbandwidth, buf(i, 4), buf(i, 4):uint())
+          i = i + 4
+          command_tree:add(pf_connverify_outgoingbandwidth, buf(i, 4), buf(i, 4):uint())
+          i = i + 4
+          command_tree:add(pf_connverify_packetthrottleinterval, buf(i, 4), buf(i, 4):uint())
+          i = i + 4
+          command_tree:add(pf_connverify_packetthrottleaccel, buf(i, 4), buf(i, 4):uint())
+          i = i + 4
+          command_tree:add(pf_connverify_packetthrottledecel, buf(i, 4), buf(i, 4):uint())
+          i = i + 4
+          command_tree:add(pf_connverify_connectid, buf(i, 4), buf(i, 4):uint())
+          i = i + 4
+       elseif command == 4 then
+          -- ENetProtocolDisconnect
+          command_tree:add(pf_disconn_data, buf(i, 4), buf(i, 4):int())
+       elseif command == 5 then
+          -- ENetProtocolPing
+       elseif command == 6 then
+          -- ENetProtocolSendReliable
+          command_tree:add(pf_sendrel_data, buf(i, command_length))
+          i = i + command_length
+       elseif command == 7 then
+          -- ENetProtocolSendUnreliable
+          command_tree:add(pf_sendunrel_unrelseqnum, buf(i, 4), buf(i, 4):int())
+          i = i + 4
+          data_length = data_length - 4
+          command_tree:add(pf_sendunrel_data, buf(i, data_length))
+          i = i + data_length
+       elseif command == 8 then
+          -- ENetProtocolSendFragment
+          command_tree:add(pf_sendfrag_startseqnum, buf(i, 4), buf(i, 4):int())
+          i = i + 4
+          command_tree:add(pf_sendfrag_fragcount, buf(i, 4), buf(i, 4):int())
+          i = i + 4
+          command_tree:add(pf_sendfrag_fragnum, buf(i, 4), buf(i, 4):int())
+          i = i + 4
+          command_tree:add(pf_sendfrag_totallen, buf(i, 4), buf(i, 4):int())
+          i = i + 4
+          command_tree:add(pf_sendfrag_fragoff, buf(i, 4), buf(i, 4):int())
+          i = i + 4
+          data_length = data_length - 20
+          command_tree:add(pf_sendfrag_data, buf(i, data_length))
+          i = i + data_length
+       elseif command == 9 then
+          -- ENetProtocolSendUnsequenced
+          command_tree:add(pf_sendunseq_unseqgroup, buf(i, 4), buf(i, 4):int())
+          i = i + 4
+          data_length = data_length - 4
+          command_tree:add(pf_sendunseq_data, buf(i, command_length))
+          i = i + data_length
+       elseif command == 10 then
+          -- ENetProtocolBandwidthLimit
+          command_tree:add(pf_bwlimit_incomingbandwidth, buf(i, 4), buf(i, 4):uint())
+          i = i + 4
+          command_tree:add(pf_bwlimit_outgoingbandwidth, buf(i, 4), buf(i, 4):uint())
+          i = i + 4
+       elseif command == 11 then
+          -- ENetProtocolThrottleConfigure
+          command_tree:add(pf_throttle_packetthrottleinterval, buf(i, 4), buf(i, 4):uint())
+          i = i + 4
+          command_tree:add(pf_throttle_packetthrottleaccel, buf(i, 4), buf(i, 4):uint())
+          i = i + 4
+          command_tree:add(pf_throttle_packetthrottledecel, buf(i, 4), buf(i, 4):uint())
+          i = i + 4
+       elseif command == 12 then
+          -- TODO: ENetProtocolSendUnreliableFragment
+       end
     end
 end
 
