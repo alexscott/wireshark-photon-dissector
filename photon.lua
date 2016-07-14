@@ -2,6 +2,9 @@
 
 -- TODO: support Photon CRC check
 -- TODO: enumerate possible command flags
+-- TODO: support encrypted messages
+-- TODO: support Photon debug flag
+-- TODO: deserialize message parameter table
 
  -- ENet commands 9, 10, and 11 aren't used in Photon AFAIK
 local command_types = {
@@ -25,6 +28,69 @@ local channel_names = {
    [2] = "VoIP",
    [3] = "RPC",
    [4] = "Photon view serialization"
+}
+
+-- Photon message types (things that can be sent in a command)
+local message_types = {
+   [2] = "Operation request",
+   [3] = "Operation response",
+   [4] = "Event data",
+   [7] = "Operation response"
+}
+
+-- Photon operations
+local operation_names = {
+   [220] = "GetRegions",
+   [221] = "GetLobbyStats",
+   [222] = "FindFriends",
+   [223] = "DebugGame",
+   [224] = "CancelJoinRandomGame",
+   [225] = "JoinRandomGame",
+   [226] = "JoinGame",
+   [227] = "CreateGame",
+   [228] = "LeaveLobby",
+   [229] = "JoinLobby",
+   [230] = "Authenticate",
+   [248] = "ChangeGroups",
+   [249] = "Ping",
+   [251] = "GetProperties",
+   [252] = "SetProperties",
+   [253] = "RaiseEvent",
+   [254] = "Leave",
+   [255] = "Join"
+}
+
+-- Photon events
+local event_names = {
+   -- Generic Photon events
+   [210] = "AzureNodeInfo",
+   [224] = "TypedLobbyStats",
+   [226] = "AppStats",
+   [227] = "Match",
+   [228] = "QueueState",
+   [229] = "GameListUpdate",
+   [230] = "GameList",
+   [253] = "PropertiesChanged",
+   [254] = "Leave",
+   [255] = "Join",
+
+   -- PUN events
+   [200] = "RPC",
+   [201] = "SendSerialize",
+   [202] = "Instantiation",
+   [203] = "CloseConnection",
+   [204] = "Destroy",
+   [205] = "RemoveCachedRPCs",
+   [206] = "SendSerializeReliable",
+   [207] = "DestroyPlayer",
+   [208] = "AssignMaster",
+   [209] = "OwnershipRequest",
+   [210] = "OwnershipTransfer",
+   [211] = "VacantViewIds",
+
+   -- Altspace application-specific events
+   [135] = "MulticastRPC",
+   [179] = "VoIP"
 }
 
 local photon = Proto("photon", "Photon")
@@ -56,12 +122,8 @@ local pf_conn_data = ProtoField.bytes("photon.command.conn_data", "Data", base.H
 -- connection verifications
 local pf_connverify_data = ProtoField.bytes("photon.command.connverify_data", "Data", base.HEX)
 
--- reliable sends
-local pf_sendrel_data = ProtoField.bytes("photon.command.sendrel_data", "Data")
-
 -- unreliable sends
 local pf_sendunrel_unrelseqnum = ProtoField.int32("photon.command.sendunrel_unrelseqnum", "Unreliable sequence number", base.DEC)
-local pf_sendunrel_data = ProtoField.bytes("photon.command.sendunrel_data", "Data")
 
 -- fragment sends
 local pf_sendfrag_startseqnum = ProtoField.int32("photon.command.sendfrag_startseqnum", "Start sequence number", base.DEC)
@@ -70,6 +132,18 @@ local pf_sendfrag_fragnum = ProtoField.int32("photon.command.sendfrag_fragnum", 
 local pf_sendfrag_totallen = ProtoField.int32("photon.command.sendfrag_totallen", "Total length", base.DEC)
 local pf_sendfrag_fragoff = ProtoField.int32("photon.command.sendfrag_fragoff", "Fragment offset", base.DEC)
 local pf_sendfrag_data = ProtoField.bytes("photon.command.sendfrag_data", "Data")
+
+-- reliable and unreliable sends
+local pf_command_msg = ProtoField.bytes("photon.command.message", "Message data")
+local pf_command_msg_signifier = ProtoField.uint8("photon.command.message.signifier", "Message signifier byte", base.HEX)
+local pf_command_msg_type = ProtoField.uint8("photon.command.message.type", "Message type", base.DEC, message_types)
+local pf_command_msg_parameters = ProtoField.bytes("photon.command.message.parameters", "Parameters", base.HEX)
+
+local pf_command_op_code = ProtoField.uint8("photon.command.message.opcode", "Operation code", base.DEC, operation_names)
+local pf_command_op_returncode = ProtoField.uint16("photon.command.message.opreturncode", "Operation return code", base.DEC)
+local pf_command_op_debug = ProtoField.uint8("photon.command.operation.opdebug", "Operation debug byte", base.HEX)
+
+local pf_command_ev_code = ProtoField.uint8("photon.command.operation.eventcode", "Event code", base.DEC, event_names)
 
 photon.fields = {
     pf_protoheader_peerid,
@@ -88,20 +162,70 @@ photon.fields = {
     pf_ack_recvsenttime,
     pf_conn_data,
     pf_connverify_data,
-    pf_sendrel_data,
     pf_sendunrel_unrelseqnum,
-    pf_sendunrel_data,
     pf_sendfrag_startseqnum,
     pf_sendfrag_fragcount,
     pf_sendfrag_fragnum,
     pf_sendfrag_totallen,
     pf_sendfrag_fragoff,
-    pf_sendfrag_data
+    pf_sendfrag_data,
+    pf_command_msg,
+    pf_command_msg_signifier,
+    pf_command_msg_type,
+    pf_command_msg_parameters,
+    pf_command_op_code,
+    pf_command_op_returncode,
+    pf_command_op_debug,
+    pf_command_ev_code
 }
 
 local command_count_field = Field.new("photon.commandcount")
 local command_type_field = Field.new("photon.command.type")
 local command_length_field = Field.new("photon.command.length")
+local command_msg_type_field = Field.new("photon.command.message.type")
+
+function get_last_field_info(field)
+   local tbl = { field() }
+   return tbl[#tbl]
+end
+
+-- Reads Photon message number `num` from a Photon packet stored in `buf`, starting at `idx` and consuming `len` bytes.
+-- Returns the next index after the message is read.
+function read_message(buf, idx, num, len, root)
+   local tree = root:add(pf_command_msg, len, "Message")
+   local msg_header_length = 2
+   tree:add(pf_command_msg_signifier, buf(idx, 1))
+   tree:add(pf_command_msg_type, buf(idx + 1, 1))
+
+   local msg_type_info = get_last_field_info(command_msg_type_field)
+   tree:append_text(string.format(" - %s", msg_type_info.display))
+
+   local msg_type = msg_type_info()
+   idx = idx + msg_header_length
+
+   if msg_type == 2 then
+      local msg_meta_length = 1
+      local data_length = len - msg_header_length - msg_meta_length
+      tree:add(pf_command_op_code, buf(idx, 1))
+      tree:add(pf_command_msg_parameters, buf(idx, data_length))
+      return idx + msg_meta_length + data_length
+   elseif msg_type == 3 or msg_type == 7 then
+      local msg_meta_length = 4
+      local data_length = len - msg_header_length - msg_meta_length
+      tree:add(pf_command_op_code, buf(idx, 1))
+      tree:add(pf_command_op_returncode, buf(idx + 1, 2))
+      tree:add(pf_command_op_debug, buf(idx + 3, 1))
+      tree:add(pf_command_msg_parameters, buf(idx + msg_meta_length, data_length))
+      return idx + msg_meta_length + data_length
+   elseif msg_type == 4 then
+      local msg_meta_length = 1
+      local data_length = len - msg_header_length - msg_meta_length
+      tree:add(pf_command_ev_code, buf(idx, 1))
+      tree:add(pf_command_msg_parameters, buf(idx + msg_meta_length, data_length))
+      return idx + msg_meta_length + data_length
+   end
+   return idx
+end
 
 -- Reads ENet command number `num` from a Photon packet stored in `buf`, starting at `idx`.
 -- Returns the next index after the command is read.
@@ -143,14 +267,12 @@ function read_command(buf, idx, num, root)
       return idx + data_length
    elseif command == 6 then
       local data_length = command_length - command_header_length
-      tree:add(pf_sendrel_data, buf(idx, data_length))
-      return idx + data_length
+      return read_message(buf, idx, num, data_length, tree)
    elseif command == 7 then
       local command_meta_length = 4
       tree:add(pf_sendunrel_unrelseqnum, buf(idx, 4))
       local data_length = command_length - command_header_length - command_meta_length
-      tree:add(pf_sendunrel_data, buf(idx + command_meta_length, data_length))
-      return idx + data_length + command_meta_length
+      return read_message(buf, idx + command_meta_length, num, data_length, tree)
    elseif command == 8 then
       local command_meta_length = 20
       tree:add(pf_sendfrag_startseqnum, buf(idx, 4))
