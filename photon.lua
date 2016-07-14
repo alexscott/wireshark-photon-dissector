@@ -191,9 +191,9 @@ function get_last_field_info(field)
    return tbl[#tbl]
 end
 
--- Reads Photon message number `num` from a Photon packet stored in `buf`, starting at `idx` and consuming `len` bytes.
+-- Reads a Photon message from a Photon packet stored in `buf`, starting at `idx` and consuming `len` bytes.
 -- Returns the next index after the message is read.
-function read_message(buf, idx, num, len, root)
+function read_message(buf, idx, len, root)
    local tree = root:add(pf_command_msg, len, "Message")
    local msg_header_length = 2
    tree:add(pf_command_msg_signifier, buf(idx, 1))
@@ -245,8 +245,8 @@ function read_command(buf, idx, num, root)
    tree:add(pf_cmdheader_commandlength, buf(idx + 4, 4))
    tree:add(pf_cmdheader_relseqnum, buf(idx + 8, 4))
 
-   local command_type_info = select(num, command_type_field())
-   local command_length_info = select(num, command_length_field())
+   local command_type_info = get_last_field_info(command_type_field)
+   local command_length_info = get_last_field_info(command_length_field)
 
    tree:append_text(string.format(" - %s", command_type_info.display))
    tree:set_len(command_length_info() + command_header_length)
@@ -272,12 +272,12 @@ function read_command(buf, idx, num, root)
       return idx + data_length
    elseif command == 6 then
       local data_length = command_length - command_header_length
-      return read_message(buf, idx, num, data_length, tree)
+      return read_message(buf, idx, data_length, tree)
    elseif command == 7 then
       local command_meta_length = 4
       tree:add(pf_sendunrel_unrelseqnum, buf(idx, 4))
       local data_length = command_length - command_header_length - command_meta_length
-      return read_message(buf, idx + command_meta_length, num, data_length, tree)
+      return read_message(buf, idx + command_meta_length, data_length, tree)
    elseif command == 8 then
       local command_meta_length = 20
       tree:add(pf_sendfrag_startseqnum, buf(idx, 4))
