@@ -137,6 +137,7 @@ local pf_sendfrag_data = ProtoField.bytes("photon.command.sendfrag_data", "Data"
 local pf_command_msg = ProtoField.bytes("photon.command.message", "Message data")
 local pf_command_msg_signifier = ProtoField.uint8("photon.command.message.signifier", "Message signifier byte", base.HEX)
 local pf_command_msg_type = ProtoField.uint8("photon.command.message.type", "Message type", base.DEC, message_types)
+local pf_command_msg_parametercount = ProtoField.int16("photon.command.message.parametercount", "Parameter count", base.DEC)
 local pf_command_msg_parameters = ProtoField.bytes("photon.command.message.parameters", "Parameters", base.HEX)
 
 local pf_command_op_code = ProtoField.uint8("photon.command.message.opcode", "Operation code", base.DEC, operation_names)
@@ -173,6 +174,7 @@ photon.fields = {
     pf_command_msg_signifier,
     pf_command_msg_type,
     pf_command_msg_parameters,
+    pf_command_msg_parametercount,
     pf_command_op_code,
     pf_command_op_returncode,
     pf_command_op_debug,
@@ -204,23 +206,26 @@ function read_message(buf, idx, num, len, root)
    idx = idx + msg_header_length
 
    if msg_type == 2 then
-      local msg_meta_length = 1
+      local msg_meta_length = 3
       local data_length = len - msg_header_length - msg_meta_length
       tree:add(pf_command_op_code, buf(idx, 1))
+      tree:add(pf_command_msg_parametercount, buf(idx + 1, 2))
       tree:add(pf_command_msg_parameters, buf(idx, data_length))
       return idx + msg_meta_length + data_length
    elseif msg_type == 3 or msg_type == 7 then
-      local msg_meta_length = 4
+      local msg_meta_length = 6
       local data_length = len - msg_header_length - msg_meta_length
       tree:add(pf_command_op_code, buf(idx, 1))
       tree:add(pf_command_op_returncode, buf(idx + 1, 2))
       tree:add(pf_command_op_debug, buf(idx + 3, 1))
+      tree:add(pf_command_msg_parametercount, buf(idx + 4, 2))
       tree:add(pf_command_msg_parameters, buf(idx + msg_meta_length, data_length))
       return idx + msg_meta_length + data_length
    elseif msg_type == 4 then
-      local msg_meta_length = 1
+      local msg_meta_length = 3
       local data_length = len - msg_header_length - msg_meta_length
       tree:add(pf_command_ev_code, buf(idx, 1))
+      tree:add(pf_command_msg_parametercount, buf(idx + 1, 2))
       tree:add(pf_command_msg_parameters, buf(idx + msg_meta_length, data_length))
       return idx + msg_meta_length + data_length
    end
