@@ -210,7 +210,7 @@ function read_message(buf, idx, num, len, root)
       local data_length = len - msg_header_length - msg_meta_length
       tree:add(pf_command_op_code, buf(idx, 1))
       tree:add(pf_command_msg_parametercount, buf(idx + 1, 2))
-      tree:add(pf_command_msg_parameters, buf(idx, data_length))
+      tree:add(pf_command_msg_parameters, buf(idx + msg_meta_length, data_length))
       return idx + msg_meta_length + data_length
    elseif msg_type == 3 or msg_type == 7 then
       local msg_meta_length = 6
