@@ -117,10 +117,10 @@ local pf_ack_recvrelseqnum = ProtoField.int32("photon.command.ack_recvrelseqnum"
 local pf_ack_recvsenttime = ProtoField.uint32("photon.command.ack_recvsenttime", "Received sent timestamp", base.DEC)
 
 -- connections
-local pf_conn_data = ProtoField.bytes("photon.command.conn_data", "Data", base.HEX)
+local pf_conn_data = ProtoField.bytes("photon.command.conn_data", "Data", base.COLON)
 
 -- connection verifications
-local pf_connverify_data = ProtoField.bytes("photon.command.connverify_data", "Data", base.HEX)
+local pf_connverify_data = ProtoField.bytes("photon.command.connverify_data", "Data", base.COLON)
 
 -- unreliable sends
 local pf_sendunrel_unrelseqnum = ProtoField.int32("photon.command.sendunrel_unrelseqnum", "Unreliable sequence number", base.DEC)
@@ -138,7 +138,7 @@ local pf_command_msg = ProtoField.bytes("photon.command.message", "Message data"
 local pf_command_msg_signifier = ProtoField.uint8("photon.command.message.signifier", "Message signifier byte", base.HEX)
 local pf_command_msg_type = ProtoField.uint8("photon.command.message.type", "Message type", base.DEC, message_types)
 local pf_command_msg_parametercount = ProtoField.int16("photon.command.message.parametercount", "Parameter count", base.DEC)
-local pf_command_msg_parameters = ProtoField.bytes("photon.command.message.parameters", "Parameters", base.HEX)
+local pf_command_msg_parameters = ProtoField.bytes("photon.command.message.parameters", "Parameters", base.COLON)
 
 local pf_command_op_code = ProtoField.uint8("photon.command.message.opcode", "Operation code", base.DEC, operation_names)
 local pf_command_op_returncode = ProtoField.uint16("photon.command.message.opreturncode", "Operation return code", base.DEC)
